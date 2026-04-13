@@ -73,6 +73,18 @@ Capturez le contenu de n'importe quelle page web et importez-le directement dans
 
 ## 🚀 Installation
 
+### ⚠️ Prérequis
+
+Avant d'utiliser l'extension, **chaque compte Google** que vous souhaitez utiliser doit avoir été connecté à NotebookLM au moins une fois :
+
+1. Rendez-vous sur **[notebooklm.google.com](https://notebooklm.google.com/)**
+2. Connectez-vous avec le compte Google souhaité
+3. Attendez que la page d'accueil de NotebookLM se charge (la liste de vos carnets doit s'afficher)
+
+> 💡 **Pourquoi ?** L'extension détecte vos comptes en interrogeant les cookies de session NotebookLM. Si vous ne vous êtes jamais connecté à NotebookLM avec un compte, aucun cookie ne sera présent et le compte sera invisible pour l'extension. Se connecter simplement à Google (Gmail, Drive, etc.) ne suffit pas.
+
+> 🔄 **Multi-comptes** : Si vous utilisez plusieurs comptes Google dans le même navigateur, répétez cette opération pour chacun d'eux. L'extension proposera alors un menu déroulant pour choisir le compte cible.
+
 ### Méthode 1 : Depuis le fichier XPI signé
 
 1. Télécharger le fichier `.xpi` depuis `dist/`
@@ -166,4 +178,4 @@ notebooklm-pdf-clipper/
 ---
 
 *Projet développé selon la méthodologie **Spec-Driven Development (SDD)**.*
-*Version 3.5.2 — Avril 2026*
+*Version 3.5.3 — Avril 2026*
