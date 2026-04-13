@@ -88,6 +88,15 @@ document.addEventListener('DOMContentLoaded', () => {
      const btn = e.target.closest('.format-btn');
      if (!btn || btn.classList.contains('active') || btn.classList.contains('btn-disabled')) return;
 
+     // Si une sélection est en attente, la cleariser quand l'utilisateur change de format
+     if (pendingSelection) {
+       browser.storage.local.remove('nwc_pending_selection');
+       pendingSelection = null;
+       uiSelectionBanner.classList.add('hidden');
+       // Réactiver les boutons qui étaient grisés par la sélection
+       uiFormatToggle.querySelectorAll('.format-btn').forEach(b => b.classList.remove('btn-disabled'));
+     }
+
      // Désélectionner tous les boutons (format toggle + direct)
      uiFormatToggle.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
      if (btnDirectImport) btnDirectImport.classList.remove('active');
@@ -377,8 +386,8 @@ async function checkPendingSelection() {
      
      if (!sel || !sel.text) return;
      
-     // Ignorer les sélections trop anciennes (> 5 min)
-     if (Date.now() - sel.timestamp > 5 * 60 * 1000) {
+     // Ignorer les sélections trop anciennes (> 2 min)
+     if (Date.now() - sel.timestamp > 2 * 60 * 1000) {
        await browser.storage.local.remove('nwc_pending_selection');
        return;
      }
@@ -388,11 +397,16 @@ async function checkPendingSelection() {
      // Afficher le bandeau avec aperçu
      const wordCount = sel.text.split(/\s+/).filter(w => w.length > 0).length;
      const preview = sel.text.substring(0, 60) + (sel.text.length > 60 ? '…' : '');
-     uiSelectionPreview.textContent = `📋 "${preview}" (${wordCount} mots)`;
+     uiSelectionPreview.textContent = `"${preview}" (${wordCount} mots)`;
      uiSelectionBanner.classList.remove('hidden');
      
-     // Basculer sur le format "selection"
+     // Basculer sur le format "selection" et griser URL + Screenshot (inutiles pour du texte)
      uiFormatToggle.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+     const urlBtn = uiFormatToggle.querySelector('[data-format="url"]');
+     const screenshotBtn = uiFormatToggle.querySelector('[data-format="screenshot"]');
+     if (urlBtn) urlBtn.classList.add('btn-disabled');
+     if (screenshotBtn) screenshotBtn.classList.add('btn-disabled');
+     
      currentFormat = 'selection';
      updateCaptureButtonLabel();
      
@@ -400,6 +414,9 @@ async function checkPendingSelection() {
      if (currentSelectedNotebookId) {
        btnCapture.disabled = false;
      }
+     
+     // Marquer la sélection comme vue (elle sera supprimée au prochain checkPendingSelection)
+     await browser.storage.local.remove('nwc_pending_selection');
    } catch (e) {
      console.warn('[Popup] Erreur vérification sélection:', e.message);
    }

@@ -148,6 +148,8 @@ browser.runtime.onInstalled.addListener(() => {
         title: "📎 Clipper la sélection dans NotebookLM",
         contexts: ["selection"]
     });
+    // Nettoyer les sélections obsolètes au démarrage/mise à jour
+    browser.storage.local.remove('nwc_pending_selection');
 });
 
 browser.contextMenus.onClicked.addListener(async (info, tab) => {
