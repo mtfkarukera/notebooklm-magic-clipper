@@ -23,3 +23,7 @@ tasks.md
 
 # Libs obsolètes
 lib/html2pdf.bundle.min.js
+
+# Dev / signing scripts
+sign.sh
+web-ext-artifacts/
