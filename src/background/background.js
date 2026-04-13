@@ -141,6 +141,35 @@ async function detectFileType(url) {
     return { directImport: false };
 }
 
+// ═══ Menu Contextuel ═══
+// Créer l'entrée de menu au clic droit → ouvre la fenêtre NWC détachée
+browser.runtime.onInstalled.addListener(() => {
+    browser.contextMenus.create({
+        id: "nwc-open-clipper",
+        title: "📎 Importer dans NotebookLM",
+        contexts: ["page", "image", "audio", "video", "link"]
+    });
+});
+
+browser.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === "nwc-open-clipper") {
+        openClipperWindow();
+    }
+});
+
+/**
+ * Ouvre la fenêtre NWC détachée (utilisable depuis le menu contextuel ou la popup).
+ * Utilise popup.html?window=1 pour réutiliser le même code sans duplication.
+ */
+function openClipperWindow() {
+    browser.windows.create({
+        url: browser.runtime.getURL("src/popup/popup.html?window=1"),
+        type: "popup",
+        width: 420,
+        height: 520
+    });
+}
+
 // Routeur Principal recevant les messages de la Popup et du Content Script
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     
@@ -300,6 +329,12 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
             sendResponse({ directImport: false });
         });
         return true;
+    }
+
+    // Ouvrir la fenêtre NWC détachée (demandé par la popup en mode local)
+    if (message.action === "OPEN_CLIPPER_WINDOW") {
+        openClipperWindow();
+        return;
     }
 
     // Upload d'un fichier local sélectionné via le file picker de la popup

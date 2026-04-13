@@ -25,6 +25,9 @@ let detectedFileInfo = null; // { directImport, mimeType, label, category, isLoc
 let pickedFileDataUri = null; // File picker : data URI du fichier sélectionné
 let pickedFileName = null;   // File picker : nom du fichier sélectionné
 
+// Détection du mode fenêtre (vs popup)
+const isWindowMode = new URLSearchParams(window.location.search).has('window');
+
 // Helper : créer un placeholder textuel sécurisé (remplace innerHTML)
 function setPlaceholder(container, text, style) {
   const div = document.createElement('div');
@@ -317,19 +320,33 @@ async function detectActiveTabFileType() {
        uiDirectImportSection.classList.remove('hidden');
 
        if (result.isLocal) {
-         // === Fichier local : afficher le file picker, masquer le bouton direct ===
-         btnDirectImport.classList.add('hidden');
-         uiFilePickerSection.classList.remove('hidden');
-         filePickerLabel.textContent = `📂 Sélectionner le ${result.label}`;
-         
+         // === Fichier local ===
          // Griser TOUS les boutons de format (rien ne marche sur file://)
          uiFormatToggle.querySelectorAll('.format-btn').forEach(b => {
            b.classList.add('btn-disabled');
            b.classList.remove('active');
          });
-         
-         // Pré-sélectionner le format direct
          currentFormat = 'direct';
+
+         if (isWindowMode) {
+           // Mode fenêtre : file picker fonctionne normalement
+           btnDirectImport.classList.add('hidden');
+           uiFilePickerSection.classList.remove('hidden');
+           filePickerLabel.textContent = `📂 Sélectionner le ${result.label}`;
+         } else {
+           // Mode popup : ouvrir la fenêtre détachée au lieu du picker
+           btnDirectImport.classList.add('hidden');
+           uiFilePickerSection.classList.remove('hidden');
+           filePickerLabel.textContent = `📂 Ouvrir l'importateur`;
+           // Remplacer le comportement du file picker par l'ouverture de la fenêtre
+           filePickerLabel.removeAttribute('for'); // Déconnecter du <input>
+           filePickerLabel.style.cursor = 'pointer';
+           filePickerLabel.addEventListener('click', () => {
+             browser.runtime.sendMessage({ action: "OPEN_CLIPPER_WINDOW" });
+             window.close();
+           });
+         }
+         
          updateCaptureButtonLabel();
        } else {
          // === Fichier distant : bouton Import Direct normal ===
