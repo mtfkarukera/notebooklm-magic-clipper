@@ -142,57 +142,67 @@ async function detectFileType(url) {
 }
 
 // ═══ Menu Contextuel : Capture de sélection ═══
-browser.runtime.onInstalled.addListener(() => {
-    browser.contextMenus.create({
-        id: "nwc-clip-selection",
-        title: "📎 Clipper la sélection dans NotebookLM",
-        contexts: ["selection"]
-    });
+browser.runtime.onInstalled.addListener(async () => {
     // Nettoyer les sélections obsolètes au démarrage/mise à jour
     browser.storage.local.remove('nwc_pending_selection');
-});
-
-browser.contextMenus.onClicked.addListener(async (info, tab) => {
-    if (info.menuItemId === "nwc-clip-selection" && info.selectionText) {
-        // 1. Capturer le HTML formaté via le content script (si disponible)
-        let selectionHtml = null;
-        try {
-            const response = await browser.tabs.sendMessage(tab.id, {
-                action: "GET_SELECTION_HTML"
-            });
-            if (response?.html) {
-                selectionHtml = response.html;
-            }
-        } catch (e) {
-            console.warn("[Background] Content script inaccessible, fallback texte brut.");
-        }
-
-        // 2. Stocker la sélection dans storage.local
-        await browser.storage.local.set({
-            nwc_pending_selection: {
-                text: info.selectionText,
-                html: selectionHtml,
-                pageUrl: info.pageUrl || tab.url,
-                pageTitle: tab.title,
-                timestamp: Date.now()
-            }
+    
+    // Recréer le menu contextuel (removeAll évite les doublons après mise à jour)
+    try {
+        await browser.contextMenus.removeAll();
+        browser.contextMenus.create({
+            id: "nwc-clip-selection",
+            title: "📎 Clipper la sélection dans NotebookLM",
+            contexts: ["selection"]
         });
-
-        // 3. Tenter d'ouvrir la popup
-        try {
-            await browser.action.openPopup();
-        } catch (e) {
-            // Fallback : notification pour guider l'utilisateur
-            console.warn("[Background] openPopup() échoué:", e.message);
-            browser.notifications.create("nwc-selection-ready", {
-                type: "basic",
-                iconUrl: browser.runtime.getURL("icons/icon.svg"),
-                title: "Sélection capturée ✓",
-                message: "Cliquez sur le bouton NotebookLM Web Clipper pour choisir un carnet."
-            });
-        }
+    } catch (e) {
+        // Firefox Android peut ne pas supporter certaines options — on n'échoue pas
+        console.warn("[Background] contextMenus non disponible:", e.message);
     }
 });
+
+if (browser.contextMenus?.onClicked) {
+    browser.contextMenus.onClicked.addListener(async (info, tab) => {
+        if (info.menuItemId === "nwc-clip-selection" && info.selectionText) {
+            // 1. Capturer le HTML formaté via le content script (si disponible)
+            let selectionHtml = null;
+            try {
+                const response = await browser.tabs.sendMessage(tab.id, {
+                    action: "GET_SELECTION_HTML"
+                });
+                if (response?.html) {
+                    selectionHtml = response.html;
+                }
+            } catch (e) {
+                console.warn("[Background] Content script inaccessible, fallback texte brut.");
+            }
+
+            // 2. Stocker la sélection dans storage.local
+            await browser.storage.local.set({
+                nwc_pending_selection: {
+                    text: info.selectionText,
+                    html: selectionHtml,
+                    pageUrl: info.pageUrl || tab.url,
+                    pageTitle: tab.title,
+                    timestamp: Date.now()
+                }
+            });
+
+            // 3. Tenter d'ouvrir la popup
+            try {
+                await browser.action.openPopup();
+            } catch (e) {
+                // Fallback : notification pour guider l'utilisateur
+                console.warn("[Background] openPopup() échoué:", e.message);
+                browser.notifications.create("nwc-selection-ready", {
+                    type: "basic",
+                    iconUrl: browser.runtime.getURL("icons/icon.svg"),
+                    title: "Sélection capturée ✓",
+                    message: "Cliquez sur le bouton NotebookLM Web Clipper pour choisir un carnet."
+                });
+            }
+        }
+    });
+}
 
 // Routeur Principal recevant les messages de la Popup et du Content Script
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -496,7 +506,12 @@ async function executeCaptureAndUploadWorkflow(targetNotebookId, format) {
         // ═══ Pipeline Import Direct : fetch binaire → upload ═══
         notifyUI("STATUS_UPDATE", { text: "⚡ Téléchargement du fichier...", status: "info" });
         
-        const fileResponse = await fetch(pageUrl);
+        let fileResponse;
+        try {
+            fileResponse = await fetch(pageUrl, { credentials: 'include' });
+        } catch (fetchErr) {
+            throw new Error(`Impossible de récupérer le fichier. Le serveur bloque le téléchargement.`);
+        }
         if (!fileResponse.ok) throw new Error(`Échec téléchargement: HTTP ${fileResponse.status}`);
         
         const fileBlob = await fileResponse.blob();
