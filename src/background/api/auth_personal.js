@@ -56,33 +56,59 @@ export async function fetchCSRFToken(cookieString, authuserIndex = 0) {
 
 export async function detectGoogleAccounts(cookieString) {
   const accounts = [];
-  const maxAccounts = 5; // On ne scanne pas à l'infini
+  const maxAccounts = 5;
+  const assignedEmails = new Set(); // Emails déjà attribués à un index
 
   for (let i = 0; i < maxAccounts; i++) {
     try {
       const response = await fetch(`https://notebooklm.google.com/?authuser=${i}`, {
         method: 'GET',
-        headers: { 'Cookie': cookieString }
+        headers: { 'Cookie': cookieString },
+        redirect: 'manual'  // Ne pas suivre les redirections automatiquement
       });
 
-      // Si Google nous redirige vers la page de login, ce compte n'existe pas ou n'est pas connecté
-      if (response.url.includes('accounts.google.com') || response.url.includes('ServiceLogin')) {
-        break; 
+      // HTTP 302/303 vers login = ce compte n'existe pas
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get('Location') || '';
+        if (location.includes('accounts.google.com') || location.includes('ServiceLogin')) {
+          break;
+        }
+      }
+
+      // Si la réponse est une redirection suivie automatiquement vers login
+      if (response.url && (response.url.includes('accounts.google.com') || response.url.includes('ServiceLogin'))) {
+        break;
       }
       
       if (!response.ok) break;
 
       const html = await response.text();
       
-      // Extraction de l'email. Google le place souvent dans le WIZ_global_data
-      // On cherche un format typique d'email encadré par des guillemets
-      const emailMatch = html.match(/"([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})"/);
+      // Stratégie d'extraction robuste :
+      // 1. D'abord, chercher la clé WIZ spécifique "oPEP7c" (email du user actif sur cette page)
+      const wizMatch = html.match(/"oPEP7c":"([^"]+@[^"]+)"/);
+      if (wizMatch && wizMatch[1] && !assignedEmails.has(wizMatch[1])) {
+        assignedEmails.add(wizMatch[1]);
+        accounts.push({ index: i, email: wizMatch[1] });
+        continue;
+      }
+
+      // 2. Sinon, collecter TOUS les emails de la page et prendre le premier non-attribué
+      const allEmailMatches = [...html.matchAll(/"([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})"/g)]
+        .map(m => m[1])
+        .filter(e => !e.includes('example.com') && !e.includes('gstatic.com') && !e.includes('google.com'));
       
-      if (emailMatch && emailMatch[1]) {
-        accounts.push({ index: i, email: emailMatch[1] });
+      const uniqueEmail = allEmailMatches.find(e => !assignedEmails.has(e));
+      
+      if (uniqueEmail) {
+        assignedEmails.add(uniqueEmail);
+        accounts.push({ index: i, email: uniqueEmail });
+      } else if (allEmailMatches.length > 0) {
+        // Tous les emails déjà vus : ce n'est probablement pas un nouveau compte
+        break;
       } else {
-        // En secours si la regex échoue mais que la page a chargé (session valide)
-        accounts.push({ index: i, email: `Compte ${i+1} (Index ${i})` });
+        // Aucun email trouvé mais page valide
+        accounts.push({ index: i, email: `Compte ${i + 1}` });
       }
     } catch (err) {
       console.warn(`[Multi-Account] Arrêt de la détection à l'index ${i}`, err);
