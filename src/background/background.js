@@ -105,10 +105,14 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     ext = '.pdf';
                 }
 
+                // saveAs non supporté sur Firefox Android — détection plateforme
+                const platformInfo = await browser.runtime.getPlatformInfo();
+                const isMobile = platformInfo.os === 'android';
+
                 await browser.downloads.download({
                     url: blobUrl,
                     filename: (lastCaptureFilename || 'capture') + ext,
-                    saveAs: true
+                    saveAs: !isMobile
                 });
                 sendResponse({ ok: true });
             } catch (err) {

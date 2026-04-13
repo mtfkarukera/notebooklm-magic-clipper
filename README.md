@@ -1,6 +1,6 @@
 # 📎 NotebookLM Web Clipper — Extension Firefox MV3
 
-Capturez le contenu de n'importe quelle page web et importez-le directement dans un carnet **Google NotebookLM** — en **PDF**, **Markdown** ou **URL directe**. Optimisé pour l'analyse par Gemini (grounding IA intégré).
+Capturez le contenu de n'importe quelle page web et importez-le directement dans un carnet **Google NotebookLM** — en **PDF**, **Markdown** ou **URL directe**. Compatible **Firefox Desktop et Android**. Optimisé pour l'analyse par Gemini (grounding IA intégré).
 
 ---
 
@@ -19,6 +19,7 @@ Capturez le contenu de n'importe quelle page web et importez-le directement dans
 | **Création de carnets** | Créez un nouveau carnet directement depuis l'extension |
 | **Fast Research** | Barre de recherche avec debounce (300ms) |
 | **Notification OS** | Notification système si la popup est fermée pendant l'import |
+| **Compatible Mobile** | Firefox Android : popup responsive, touch targets 48dp, détection plateforme |
 
 ### Comparaison des 3 modes
 
@@ -165,4 +166,4 @@ notebooklm-pdf-clipper/
 ---
 
 *Projet développé selon la méthodologie **Spec-Driven Development (SDD)**.*
-*Version 3.3.0 — Avril 2026*
+*Version 3.4.0 — Avril 2026*
