@@ -248,7 +248,6 @@ export async function createPersonalNotebook(title, authuserIndex = 0) {
  * @param {string} content - Contenu textuel/Markdown à injecter.
  */
 export async function addTextSource(notebookId, title, content, authuserIndex = 0) {
-    console.log(`[NotebookLM RPC] Ajout source texte: "${title}" (${content.length} chars)`);
     
     const rpcId = "izAoDd";
     // Structure exacte de notebooklm-py : _sources.py::add_text()
@@ -264,9 +263,7 @@ export async function addTextSource(notebookId, title, content, authuserIndex = 
     const result = await sendBatchExecute(rpcId, params, authuserIndex);
     
     if (result) {
-        console.log("[NotebookLM RPC] ✅ Source texte ajoutée avec succès !");
-    } else {
-        console.warn("[NotebookLM RPC] ⚠️ Réponse nulle pour addTextSource (peut être normal).");
+        console.log("[NotebookLM RPC] \u2705 Source texte ajoutée.");
     }
     
     return true;
@@ -281,7 +278,6 @@ export async function addTextSource(notebookId, title, content, authuserIndex = 
  * @param {string} url - URL complète de la page web à importer.
  */
 export async function addUrlSource(notebookId, url, authuserIndex = 0) {
-    console.log(`[NotebookLM RPC] Ajout source URL: ${url}`);
     
     const rpcId = "izAoDd";
     // Structure exacte de notebooklm-py : _sources.py::_add_url_source()
@@ -297,9 +293,7 @@ export async function addUrlSource(notebookId, url, authuserIndex = 0) {
     const result = await sendBatchExecute(rpcId, params, authuserIndex);
     
     if (result) {
-        console.log("[NotebookLM RPC] ✅ Source URL ajoutée avec succès !");
-    } else {
-        console.warn("[NotebookLM RPC] ⚠️ Réponse nulle pour addUrlSource (peut être normal).");
+        console.log("[NotebookLM RPC] \u2705 Source URL ajoutée.");
     }
     
     return true;
@@ -318,7 +312,6 @@ export async function addUrlSource(notebookId, url, authuserIndex = 0) {
  * @param {string} url - URL YouTube complète (youtube.com/watch?v=... ou youtu.be/...).
  */
 export async function addYouTubeSource(notebookId, url, authuserIndex = 0) {
-    console.log(`[NotebookLM RPC] Ajout source YouTube: ${url}`);
     
     const rpcId = "izAoDd";
     // Structure exacte de notebooklm-py : _sources.py::_add_youtube_source()
@@ -333,16 +326,13 @@ export async function addYouTubeSource(notebookId, url, authuserIndex = 0) {
     const result = await sendBatchExecute(rpcId, params, authuserIndex);
     
     if (result) {
-        console.log("[NotebookLM RPC] ✅ Source YouTube ajoutée avec succès !");
-    } else {
-        console.warn("[NotebookLM RPC] ⚠️ Réponse nulle pour addYouTubeSource (peut être normal).");
+        console.log("[NotebookLM RPC] \u2705 Source YouTube ajoutée.");
     }
     
     return true;
 }
 
 export async function uploadPersonalSource(notebookId, pdfDataUri, customTitle = null, authuserIndex = 0) {
-    console.log("[NotebookLM RPC] Démarrage upload PDF (protocole resumable en 3 étapes)...");
     
     const data = await browser.storage.local.get(['nblm_personal_cookie', 'nblm_csrf']);
     if (!data.nblm_personal_cookie || !data.nblm_csrf) {
@@ -363,7 +353,6 @@ export async function uploadPersonalSource(notebookId, pdfDataUri, customTitle =
         ? `${customTitle}.pdf` 
         : `Capture_${new Date().toISOString().slice(0,10)}.pdf`;
     const fileSize = pdfBlob.size;
-    console.log(`[NotebookLM RPC] Fichier: ${filename}, Taille: ${Math.round(fileSize / 1024)} Ko`);
 
     // ╔════════════════════════════════════════════════════════╗
     // ║ ÉTAPE 1 : Enregistrer l'intention de source (RPC)     ║
@@ -383,9 +372,8 @@ export async function uploadPersonalSource(notebookId, pdfDataUri, customTitle =
     // Extraire le SOURCE_ID de la réponse (structure imbriquée: [[[[id]]]] ou similaire)
     const sourceId = extractFirstString(registerResult);
     if (!sourceId) {
-        throw new Error("Échec enregistrement source: impossible d'obtenir SOURCE_ID. Réponse: " + JSON.stringify(registerResult).substring(0, 500));
+        throw new Error("\u00c9chec enregistrement source: impossible d'obtenir SOURCE_ID.");
     }
-    console.log(`[NotebookLM RPC] Étape 1 ✅ SOURCE_ID obtenu: ${sourceId.substring(0, 20)}...`);
 
     // ╔════════════════════════════════════════════════════════╗
     // ║ ÉTAPE 2 : Démarrer le upload resumable                ║
@@ -422,9 +410,8 @@ export async function uploadPersonalSource(notebookId, pdfDataUri, customTitle =
     
     const uploadUrl = startResponse.headers.get('x-goog-upload-url');
     if (!uploadUrl) {
-        throw new Error("Échec: pas de x-goog-upload-url dans la réponse du serveur.");
+        throw new Error("\u00c9chec: pas de x-goog-upload-url dans la r\u00e9ponse du serveur.");
     }
-    console.log(`[NotebookLM RPC] Étape 2 ✅ Upload URL obtenue.`);
 
     // ╔════════════════════════════════════════════════════════╗
     // ║ ÉTAPE 3 : Upload du fichier + finalize                ║
@@ -450,7 +437,7 @@ export async function uploadPersonalSource(notebookId, pdfDataUri, customTitle =
         throw new Error(`Échec upload fichier: HTTP ${finalizeResponse.status}`);
     }
     
-    console.log(`[NotebookLM RPC] Étape 3 ✅ Fichier uploadé et finalisé !`);
+    console.log(`[NotebookLM RPC] \u2705 Upload termin\u00e9 (${Math.round(fileSize / 1024)} Ko).`);
     return true;
 }
 

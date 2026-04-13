@@ -209,6 +209,25 @@ notebooklm-pdf-clipper/
 
 ---
 
+## 📋 Changelog récent
+
+### v4.4.0 — Optimisation & Stabilité
+- **Fix critique** : paramètres `title`/`content` inversés dans l'import de sélection
+- **Sécurité** : tous les boutons de format grisés quand une sélection est active
+- **Stabilité mobile** : `contextMenus.removeAll()` + guard `?.onClicked` (évite le crash Android)
+- **Performance** : timeout `AbortController` (10s) sur les fetches d'images
+- **Mémoire** : `URL.revokeObjectURL()` après téléchargement local
+- **Fix** : `DOWNLOAD_CAPTURE` retournait sans `return true` (fuite de promesse)
+- **Logs** : réduction drastique de la verbosité console (conformité AMO)
+
+### v4.3.x — Fonctionnalités
+- **📋 Clip de sélection** via menu contextuel → import texte source
+- **📸 Screenshot** mode captureVisibleTab → PNG
+- **⚡ Import Direct** ~50 formats avec détection MIME + HEAD request
+- **Matrice de visibilité** dynamique selon le type de fichier
+
+---
+
 ## 📝 Crédits et références
 
 - **[notebooklm-py](https://github.com/teng-lin/notebooklm-py)** — Rétro-ingénierie API RPC NotebookLM
@@ -219,4 +238,5 @@ notebooklm-pdf-clipper/
 ---
 
 *Projet développé selon la méthodologie **Spec-Driven Development (SDD)**.*
-*Version 4.3.5 — Avril 2026*
+*Version 4.4.0 — Avril 2026*
+

@@ -171,7 +171,7 @@ function renderNotebooks(list) {
         if (currentSelectedNotebookId === nb.id) {
            div.classList.add('selected');
         }
-        div.innerText = nb.title;
+        div.textContent = nb.title;
         div.onclick = () => {
             document.querySelectorAll('.notebook-item').forEach(el => el.classList.remove('selected'));
             div.classList.add('selected');

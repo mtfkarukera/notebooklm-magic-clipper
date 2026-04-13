@@ -293,7 +293,15 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "FETCH_IMAGE") {
         (async () => {
             try {
-                const response = await fetch(message.url);
+                // Timeout de 10s pour éviter de bloquer le pipeline sur des images lentes
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 10000);
+                const response = await fetch(message.url, { signal: controller.signal });
+                clearTimeout(timeout);
+                if (!response.ok) {
+                    sendResponse({ error: `HTTP ${response.status}` });
+                    return;
+                }
                 const blob = await response.blob();
                 const reader = new FileReader();
                 reader.onloadend = () => {
@@ -302,7 +310,6 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 reader.onerror = () => sendResponse({ error: "FileReader échoué" });
                 reader.readAsDataURL(blob);
             } catch (err) {
-                console.warn("[Background] Impossible de récupérer l'image:", message.url, err.message);
                 sendResponse({ error: err.message });
             }
         })();
@@ -313,7 +320,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "DOWNLOAD_CAPTURE") {
         if (!lastCaptureData) {
             sendResponse({ error: "Aucune capture disponible" });
-            return;
+            return true;
         }
         (async () => {
             try {
@@ -347,6 +354,8 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     filename: (lastCaptureFilename || 'capture') + ext,
                     saveAs: !isMobile
                 });
+                // Libérer la mémoire blob après téléchargement
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
                 sendResponse({ ok: true });
             } catch (err) {
                 sendResponse({ error: err.message });
@@ -642,7 +651,6 @@ async function executeCaptureAndUploadWorkflow(targetNotebookId, format) {
  * @param {number} authuserIndex - Index du compte Google actif.
  */
 async function uploadFileBlob(notebookId, blob, filename, authuserIndex = 0) {
-    console.log(`[NotebookLM RPC] Upload fichier: ${filename} (${Math.round(blob.size / 1024)} Ko)`);
     
     const data = await browser.storage.local.get(['nblm_personal_cookie', 'nblm_csrf']);
     if (!data.nblm_personal_cookie || !data.nblm_csrf) {
@@ -666,7 +674,6 @@ async function uploadFileBlob(notebookId, blob, filename, authuserIndex = 0) {
     if (!sourceId) {
         throw new Error("Échec enregistrement source: impossible d'obtenir SOURCE_ID.");
     }
-    console.log(`[NotebookLM RPC] Étape 1 ✅ SOURCE_ID: ${sourceId.substring(0, 20)}...`);
 
     // Étape 2 : Démarrer le upload resumable
     const uploadStartUrl = `https://notebooklm.google.com/upload/_/?authuser=${authuserIndex}`;
@@ -700,7 +707,6 @@ async function uploadFileBlob(notebookId, blob, filename, authuserIndex = 0) {
     if (!uploadUrl) {
         throw new Error("Échec: pas de x-goog-upload-url dans la réponse serveur.");
     }
-    console.log(`[NotebookLM RPC] Étape 2 ✅ Upload URL obtenue.`);
 
     // Étape 3 : Upload du fichier + finalize
     const finalizeResponse = await fetch(uploadUrl, {
@@ -722,7 +728,7 @@ async function uploadFileBlob(notebookId, blob, filename, authuserIndex = 0) {
         throw new Error(`Échec upload fichier: HTTP ${finalizeResponse.status}`);
     }
     
-    console.log(`[NotebookLM RPC] Étape 3 ✅ Fichier uploadé et finalisé !`);
+    console.log(`[NotebookLM RPC] ✅ Fichier uploadé (${Math.round(blob.size / 1024)} Ko).`);
     return true;
 }
 
