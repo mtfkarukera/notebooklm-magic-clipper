@@ -247,9 +247,9 @@ window.ClipperSerializer = {
     // innerHTML pour satisfaire la politique AMO de zéro innerHTML.
     const contentDiv = document.createElement('div');
     const parsedDoc = new DOMParser().parseFromString(contentHtml, 'text/html');
-    while (parsedDoc.body.firstChild) {
-      contentDiv.appendChild(document.importNode(parsedDoc.body.firstChild, true));
-    }
+    Array.from(parsedDoc.body.childNodes).forEach(child => {
+      contentDiv.appendChild(document.importNode(child, true));
+    });
     readerDiv.appendChild(contentDiv);
 
     container.appendChild(readerDiv);
