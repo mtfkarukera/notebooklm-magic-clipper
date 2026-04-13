@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  if (res && res.accounts && res.accounts.length > 1) {
                      const selectBox = document.getElementById("account-switcher");
                      if(selectBox) {
-                         selectBox.innerHTML = '';
+                         selectBox.replaceChildren();
                          res.accounts.forEach(acc => {
                              const opt = document.createElement("option");
                              opt.value = acc.index;
@@ -265,7 +265,7 @@ function updateAuthStatus(text, cssClass) {
   uiAuthStatus.className = `status-badge ${cssClass}`;
 }
 
-// Event au clic sur le bouton Fermer du header
+// Bouton Fermer (en bas de la popup, autonome pour mobile et desktop)
 document.getElementById('btn-close').addEventListener('click', () => {
   window.close();
 });

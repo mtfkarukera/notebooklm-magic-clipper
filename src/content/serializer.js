@@ -205,19 +205,51 @@ window.ClipperSerializer = {
     const metaBlock = document.createElement('div');
     metaBlock.className = 'clipper-meta';
 
-    let metaHtml = `<div class="meta-label">Métadonnées de Capture (NotebookLM)</div>`;
-    metaHtml += `<div class="meta-title">${this._esc(pageTitle)}</div>`;
-    if (byline) metaHtml += `<div class="meta-author">Par : ${this._esc(byline)}</div>`;
-    if (siteName) metaHtml += `<div>Site : ${this._esc(siteName)}</div>`;
-    metaHtml += `<div class="meta-date">Capturé le : ${captureDate}</div>`;
-    metaHtml += `<div><a href="${this._esc(pageUrl)}">${this._esc(pageUrl)}</a></div>`;
+    // Construction DOM sécurisée (zéro innerHTML — conformité Mozilla AMO)
+    const labelDiv = document.createElement('div');
+    labelDiv.className = 'meta-label';
+    labelDiv.textContent = 'Métadonnées de Capture (NotebookLM)';
+    metaBlock.appendChild(labelDiv);
 
-    metaBlock.innerHTML = metaHtml;
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'meta-title';
+    titleDiv.textContent = pageTitle;
+    metaBlock.appendChild(titleDiv);
+
+    if (byline) {
+      const authorDiv = document.createElement('div');
+      authorDiv.className = 'meta-author';
+      authorDiv.textContent = `Par : ${byline}`;
+      metaBlock.appendChild(authorDiv);
+    }
+    if (siteName) {
+      const siteDiv = document.createElement('div');
+      siteDiv.textContent = `Site : ${siteName}`;
+      metaBlock.appendChild(siteDiv);
+    }
+
+    const dateDiv = document.createElement('div');
+    dateDiv.className = 'meta-date';
+    dateDiv.textContent = `Capturé le : ${captureDate}`;
+    metaBlock.appendChild(dateDiv);
+
+    const urlDiv = document.createElement('div');
+    const urlLink = document.createElement('a');
+    urlLink.href = pageUrl;
+    urlLink.textContent = pageUrl;
+    urlDiv.appendChild(urlLink);
+    metaBlock.appendChild(urlDiv);
     readerDiv.appendChild(metaBlock);
 
     // --- Contenu principal ---
+    // SAFE: contentHtml est produit par Mozilla Readability.parse() (sanitisé)
+    // ou par _cleanDomFallback() (nettoyé). On utilise DOMParser au lieu de
+    // innerHTML pour satisfaire la politique AMO de zéro innerHTML.
     const contentDiv = document.createElement('div');
-    contentDiv.innerHTML = contentHtml;
+    const parsedDoc = new DOMParser().parseFromString(contentHtml, 'text/html');
+    while (parsedDoc.body.firstChild) {
+      contentDiv.appendChild(document.importNode(parsedDoc.body.firstChild, true));
+    }
     readerDiv.appendChild(contentDiv);
 
     container.appendChild(readerDiv);
@@ -321,10 +353,4 @@ window.ClipperSerializer = {
     clone.querySelectorAll('[aria-hidden="true"]').forEach(el => el.remove());
   },
 
-  /** Échappe les caractères HTML. */
-  _esc(str) {
-    const d = document.createElement('div');
-    d.textContent = str || '';
-    return d.innerHTML;
-  }
 };

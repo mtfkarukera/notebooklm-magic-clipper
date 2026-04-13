@@ -1,6 +1,7 @@
 // auth_personal.js : Rétro-ingénierie d'authentification pour les comptes Google classiques
 
-const REQUIRED_COOKIES = ['SID', 'HSID', 'SSID', 'APISID', 'SAPISID', '__Secure-1PSID', '__Secure-3PSID'];
+// Les cookies de session (SID, HSID, SSID, etc.) sont extraits automatiquement
+// par browser.cookies.getAll() sur le domaine notebooklm.google.com.
 
 export async function getPersonalAuthCookies() {
   // L'URL exacte sur laquelle interroger le cookie jar de Firefox
@@ -73,6 +74,8 @@ export async function detectGoogleAccounts(cookieString) {
         if (location.includes('accounts.google.com') || location.includes('ServiceLogin')) {
           break;
         }
+        // Redirection non-login (ex: HTTPS, dashboard) → on continue
+        continue;
       }
 
       // Si la réponse est une redirection suivie automatiquement vers login
@@ -80,6 +83,7 @@ export async function detectGoogleAccounts(cookieString) {
         break;
       }
       
+      // Erreur serveur (5xx, 4xx) — arrêter
       if (!response.ok) break;
 
       const html = await response.text();

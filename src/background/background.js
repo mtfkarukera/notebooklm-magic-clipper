@@ -17,7 +17,16 @@ let lastCaptureFormat = null;  // "pdf" ou "md"
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     
     if (message.action === "GET_AUTH_STATUS") {
-        sendResponse({ status: "CONNECTE", type: "PERSONAL" });
+        browser.cookies.getAll({ url: "https://notebooklm.google.com/" }).then(cookies => {
+            if (cookies && cookies.length > 0) {
+                sendResponse({ status: "CONNECTE", type: "PERSONAL" });
+            } else {
+                sendResponse({ status: "DECONNECTE", type: null });
+            }
+        }).catch(() => {
+            sendResponse({ status: "DECONNECTE", type: null });
+        });
+        return true;
     }
 
     if (message.action === "GET_ACCOUNTS") {

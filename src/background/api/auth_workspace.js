@@ -1,4 +1,8 @@
 // auth_workspace.js : Authentification pour les comptes Enterprise (Discovery Engine API)
+// ⚠️ NOT IMPLEMENTED — Placeholder for future Workspace API support.
+// Ce module ne contient que des stubs. Il n'est pas importé par background.js.
+// L'extension fonctionne actuellement uniquement via l'authentification personnelle
+// (auth_personal.js + rpc_client.js).
 
 export async function getWorkspaceToken() {
   try {
