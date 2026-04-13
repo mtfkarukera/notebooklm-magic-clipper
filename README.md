@@ -1,6 +1,6 @@
 # 📎 NotebookLM Web Clipper — Extension Firefox MV3
 
-Capturez le contenu de n'importe quelle page web et importez-le directement dans un carnet **Google NotebookLM** — en **PDF**, **Markdown** ou **URL directe**. Compatible **Firefox Desktop et Android**. Optimisé pour l'analyse par Gemini (grounding IA intégré).
+Capturez le contenu de n'importe quelle page web et importez-le directement dans un carnet **Google NotebookLM** — en **PDF**, **Markdown**, **URL directe**, **Screenshot**, **Import Direct** ou **Sélection de texte**. Compatible **Firefox Desktop et Android**. Optimisé pour l'analyse par Gemini (grounding IA intégré).
 
 ---
 
@@ -8,7 +8,10 @@ Capturez le contenu de n'importe quelle page web et importez-le directement dans
 
 | Fonctionnalité | Description |
 |---|---|
-| **3 modes d'import** | 📄 PDF (images), 📝 Markdown (tables parfaites), 🔗 URL (instantané) |
+| **6 modes d'import** | 📄 PDF, 📝 Markdown, 🔗 URL, 📸 Screenshot, ⚡ Import Direct, 📋 Sélection |
+| **📸 Screenshot** | Capture le viewport visible en PNG via `captureVisibleTab()` |
+| **⚡ Import Direct** | Détecte et importe ~50 types de fichiers (PDF, images, audio, vidéo, documents) |
+| **📋 Clip de sélection** | Clic droit → « 📎 Clipper la sélection » → import du texte sélectionné |
 | **Extraction Readability** | Contenu principal uniquement via [Readability.js](https://github.com/mozilla/readability) |
 | **Images haute fidélité** | Data URIs + proxy CORS intégrés au PDF via `addImage()` |
 | **Tables pipe-delimited** | En mode Markdown, tables parfaitement structurées pour Gemini |
@@ -18,18 +21,36 @@ Capturez le contenu de n'importe quelle page web et importez-le directement dans
 | **Téléchargement local** | Bouton "Télécharger ↓" après import (.pdf ou .md) |
 | **Création de carnets** | Créez un nouveau carnet directement depuis l'extension |
 | **Fast Research** | Barre de recherche avec debounce (300ms) |
+| **Matrice de visibilité** | Boutons grisés automatiquement selon le type de fichier détecté |
+| **Multi-comptes** | Sélecteur de compte Google intégré dans la popup |
 | **Notification OS** | Notification système si la popup est fermée pendant l'import |
 | **Compatible Mobile** | Firefox Android : popup responsive, touch targets 48dp, détection plateforme |
 
-### Comparaison des 3 modes
+### Comparaison des 6 modes
 
-| Critère | 📄 PDF | 📝 Markdown | 🔗 URL |
-|---|---|---|---|
-| **Vitesse** | ~3-5s | ~0.5s | **~0.1s** |
-| **Tables** | ❌ Interpréteur NBLM | ✅ Pipe-delimited | ✅ Scraping NBLM |
-| **Images** | ✅ Data URI | ❌ | ✅ Scraping NBLM |
-| **Pages protégées** | ✅ | ✅ | ❌ Paywall bloqué |
-| **Téléchargement** | ✅ .pdf | ✅ .md | ❌ |
+| Critère | 📄 PDF | 📝 Markdown | 🔗 URL | 📸 Screenshot | ⚡ Direct | 📋 Sélection |
+|---|---|---|---|---|---|---|
+| **Vitesse** | ~3-5s | ~0.5s | **~0.1s** | ~1s | ~1-3s | ~0.5s |
+| **Tables** | ❌ | ✅ Pipe-delimited | ✅ Scraping | ❌ Image | ❌ | ✅ Texte brut |
+| **Images** | ✅ Data URI | ❌ | ✅ Scraping | ✅ Viewport | ✅ Original | ❌ |
+| **Pages protégées** | ✅ | ✅ | ❌ Paywall | ✅ | ✅ | ✅ |
+| **Téléchargement** | ✅ .pdf | ✅ .md | ❌ | ❌ | ❌ | ❌ |
+| **Fichiers binaires** | ❌ | ❌ | ❌ | ❌ | ✅ ~50 formats | ❌ |
+
+### ⚡ Formats supportés par l'Import Direct
+
+L'Import Direct détecte automatiquement le type de fichier (via l'extension URL + `HEAD` request) et l'importe tel quel dans NotebookLM :
+
+| Catégorie | Formats |
+|---|---|
+| **Documents** | PDF, TXT, MD, DOCX, CSV, PPTX, EPUB |
+| **Images** | PNG, JPEG, GIF, BMP, WebP, AVIF, TIFF, ICO, JP2, HEIC, HEIF |
+| **Audio** | MP3, WAV, OGG, AAC, M4A, AIFF, MIDI, OPUS, AMR, WMA, RA, AU |
+| **Vidéo** | MP4, MPEG, AVI, 3GP, 3G2 |
+
+### 📋 Clip de sélection (menu contextuel)
+
+Sélectionnez du texte sur n'importe quelle page, faites un clic droit → **« 📎 Clipper la sélection dans NotebookLM »**. Le texte est capturé avec son formatage HTML, et la popup s'ouvre pour choisir le carnet cible. Les métadonnées de grounding (URL source, titre, date) sont automatiquement injectées.
 
 ---
 
@@ -39,26 +60,42 @@ Capturez le contenu de n'importe quelle page web et importez-le directement dans
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────────┐
 │   Popup (UI)    │────▶│  Background.js   │────▶│  NotebookLM API     │
 │  popup.html/js  │     │  (Event Page)    │     │  /batchexecute      │
-│  PDF/MD/URL     │     │  Routeur central │     │  /upload/_/         │
+│  6 modes import │     │  Routeur central │     │  /upload/_/         │
 │  Toggle format  │     │  CORS proxy img  │     │                     │
+│  Sélection clip │     │  Context menu    │     │                     │
 └─────────────────┘     └──────┬───────────┘     └─────────────────────┘
                                │
                         ┌──────▼───────────┐
                         │  Content Script  │
-                        │  orchestrator.js │
+                        │  orchestrator.js │  ← Route PDF/MD + GET_SELECTION_HTML
                         │  serializer.js   │  ← Readability + data URIs
                         │  pdf_generator.js│  ← jsPDF + addImage
                         │  md_generator.js │  ← Markdown pipe-delimited
                         └──────────────────┘
 ```
 
-### 3 pipelines d'import
+### 6 pipelines d'import
 
 | Mode | Pipeline | RPC |
 |---|---|---|
 | **📄 PDF** | Content Script → Serializer → jsPDF → Upload resumable 3 étapes | `o4cbdc` + upload |
 | **📝 Markdown** | Content Script → Serializer → MD Generator → RPC texte direct | `izAoDd` (Text) |
 | **🔗 URL** | Zéro content script → URL de l'onglet envoyée directement | `izAoDd` (URL) |
+| **📸 Screenshot** | `captureVisibleTab()` → PNG Blob → Upload resumable | upload |
+| **⚡ Direct** | Détection MIME → `fetch()` binaire → Upload resumable | upload |
+| **📋 Sélection** | Menu contextuel → `GET_SELECTION_HTML` → `addTextSource` | `izAoDd` (Text) |
+
+### Matrice de visibilité dynamique
+
+Quand un fichier est détecté (ex: image, audio), les boutons non pertinents sont automatiquement grisés :
+
+| Type détecté | PDF | MD | URL | 📸 | ⚡ Direct |
+|---|---|---|---|---|---|
+| **Page web** | ✅ | ✅ | ✅ | ✅ | ❌ |
+| **Document (PDF, DOCX...)** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Image** | ❌ | ❌ | ✅ | ✅ | ✅ |
+| **Audio / Vidéo** | ❌ | ❌ | ✅ | ❌ | ✅ |
+| **Fichier local (file://)** | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ### Double authentification
 
@@ -130,20 +167,20 @@ notebooklm-pdf-clipper/
 │   └── Readability.js             # Mozilla Readability.js
 ├── src/
 │   ├── background/
-│   │   ├── background.js           # Routeur central + 3 pipelines
+│   │   ├── background.js           # Routeur central + 6 pipelines + menu contextuel
 │   │   └── api/
 │   │       ├── auth_personal.js    # Extraction cookies + CSRF
 │   │       ├── auth_workspace.js   # OAuth 2.0 Discovery Engine
 │   │       └── rpc_client.js       # batchexecute + upload + addText + addUrl
 │   ├── content/
-│   │   ├── orchestrator.js         # Point d'entrée (route PDF/MD)
+│   │   ├── orchestrator.js         # Point d'entrée (route PDF/MD + GET_SELECTION_HTML)
 │   │   ├── serializer.js           # Readability + Reader Mode CSS + data URIs
 │   │   ├── pdf_generator.js        # jsPDF (texte + images + tables)
 │   │   └── md_generator.js         # Markdown (tables pipe-delimited)
 │   ├── popup/
-│   │   ├── popup.html              # Interface avec toggle 3 formats
+│   │   ├── popup.html              # Interface avec toggle 6 formats + bandeau sélection
 │   │   ├── popup.css               # Design Glassmorphism
-│   │   └── popup.js                # Logique UI + toggle + téléchargement
+│   │   └── popup.js                # Logique UI + toggle + détection + sélection
 │   └── shared/
 │       └── utils.js                # Utilitaires (blobToBase64)
 ├── dist/                           # XPI empaquetés
@@ -162,9 +199,13 @@ notebooklm-pdf-clipper/
 | Pages polluées | **Readability.js** extrait le contenu principal |
 | Tables mal rendues par NBLM | **Mode Markdown** avec tables pipe-delimited |
 | Pages publiques simples | **Mode URL** : NotebookLM scrape la page lui-même |
+| Capture visuelle exacte | **`captureVisibleTab()`** → PNG → upload resumable |
+| Fichiers binaires (PDF, audio, vidéo...) | **Import Direct** : détection MIME + `fetch()` + upload resumable |
+| Texte sélectionné | **Menu contextuel** → `GET_SELECTION_HTML` → `addTextSource` |
 | CORS sur API NotebookLM | `fetch()` dans le **background script** (exempt CORS) |
 | Firefox ne supporte pas `service_worker` | `background.scripts` + `"type": "module"` |
 | Upload PDF ignoré | **Protocole resumable** 3 étapes |
+| Popup ferme le file picker | Fichiers locaux (`file://`) non supportés (restriction navigateur) |
 
 ---
 
