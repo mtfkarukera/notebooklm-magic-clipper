@@ -14,8 +14,8 @@
       <span class="logo-text">NotebookLM</span>
     </div>
     <div class="header-right" style="display: flex; align-items: center; gap: 8px;">
+      <select id="account-switcher" class="hidden" title="Changer de compte Google"></select>
       <div id="auth-status" class="status-badge status-loading">Connexion...</div>
-      <button id="btn-close" title="Fermer" style="background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 14px; padding: 4px;">✖</button>
     </div>
   </header>
 
@@ -55,6 +55,9 @@
   <footer class="app-footer">
     <div id="status-message" class="status-message">Prêt</div>
   </footer>
+
+  <!-- BOUTON FERMER (Autonome, pour mobile et desktop) -->
+  <button id="btn-close" class="btn close-btn">✖ Fermer</button>
 
   <script src="popup.js"></script>
 </body>
