@@ -1,6 +1,6 @@
 // background.js : Event Page MV3, Routeur central Asynchrone
 import { getPersonalAuthCookies, fetchCSRFToken } from './api/auth_personal.js';
-import { createPersonalNotebook, uploadPersonalSource, addTextSource, addUrlSource } from './api/rpc_client.js';
+import { createPersonalNotebook, uploadPersonalSource, addTextSource, addUrlSource, addYouTubeSource } from './api/rpc_client.js';
 
 /**
  * Taille Max de PDF imposée par Google : 200 MB
@@ -225,13 +225,20 @@ async function executeCaptureAndUploadWorkflow(targetNotebookId, format) {
     // 4. ROUTING selon le format
     if (format === "url") {
         // ═══ Pipeline URL : injection directe, zéro content script ═══
-        notifyUI("STATUS_UPDATE", { text: "Envoi de l'URL à NotebookLM...", status: "info" });
-
-        await addUrlSource(finalNotebookId, pageUrl, activeIndex);
+        // Détection YouTube → pipeline natif (transcript + vidéo)
+        const isYouTube = /(?:youtube\.com\/watch|youtu\.be\/|youtube\.com\/shorts\/)/.test(pageUrl);
+        
+        if (isYouTube) {
+            notifyUI("STATUS_UPDATE", { text: "YouTube détecté → import natif...", status: "info" });
+            await addYouTubeSource(finalNotebookId, pageUrl, activeIndex);
+        } else {
+            notifyUI("STATUS_UPDATE", { text: "Envoi de l'URL à NotebookLM...", status: "info" });
+            await addUrlSource(finalNotebookId, pageUrl, activeIndex);
+        }
 
         const notebookUrl = `https://notebooklm.google.com/notebook/${finalNotebookId}`;
         notifyUI("STATUS_UPDATE", { 
-            text: "✅ URL importée !", 
+            text: isYouTube ? "✅ Vidéo YouTube importée !" : "✅ URL importée !", 
             status: "success",
             linkUrl: notebookUrl,
             showDownload: false

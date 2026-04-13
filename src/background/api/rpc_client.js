@@ -305,6 +305,42 @@ export async function addUrlSource(notebookId, url, authuserIndex = 0) {
     return true;
 }
 
+/**
+ * Ajoute une source YouTube dans un carnet NotebookLM.
+ * Contrairement à addUrlSource (URL générique), ce payload spécialisé
+ * déclenche le pipeline YouTube natif de Google : extraction du transcript,
+ * icône YouTube, lecteur vidéo intégré.
+ *
+ * Source : notebooklm-py _sources.py::_add_youtube_source()
+ * L'URL va à la position [7] dans un tableau de 11 éléments (vs [2] sur 8 pour URL).
+ *
+ * @param {string} notebookId - ID du carnet cible.
+ * @param {string} url - URL YouTube complète (youtube.com/watch?v=... ou youtu.be/...).
+ */
+export async function addYouTubeSource(notebookId, url, authuserIndex = 0) {
+    console.log(`[NotebookLM RPC] Ajout source YouTube: ${url}`);
+    
+    const rpcId = "izAoDd";
+    // Structure exacte de notebooklm-py : _sources.py::_add_youtube_source()
+    // L'URL va à la position [7] dans un tableau de 11 éléments
+    const params = [
+        [[null, null, null, null, null, null, null, [url], null, null, 1]],
+        notebookId,
+        [2],
+        [1, null, null, null, null, null, null, null, null, null, [1]],
+    ];
+    
+    const result = await sendBatchExecute(rpcId, params, authuserIndex);
+    
+    if (result) {
+        console.log("[NotebookLM RPC] ✅ Source YouTube ajoutée avec succès !");
+    } else {
+        console.warn("[NotebookLM RPC] ⚠️ Réponse nulle pour addYouTubeSource (peut être normal).");
+    }
+    
+    return true;
+}
+
 export async function uploadPersonalSource(notebookId, pdfDataUri, customTitle = null, authuserIndex = 0) {
     console.log("[NotebookLM RPC] Démarrage upload PDF (protocole resumable en 3 étapes)...");
     
