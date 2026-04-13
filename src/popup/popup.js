@@ -12,21 +12,16 @@ const uiFormatToggle = document.getElementById('format-toggle');
 const uiDirectImportSection = document.getElementById('direct-import-section');
 const btnDirectImport = document.getElementById('btn-direct-import');
 const uiDirectLabel = document.getElementById('direct-label');
-const uiFilePickerSection = document.getElementById('file-picker-section');
-const filePickerInput = document.getElementById('file-picker-input');
-const filePickerName = document.getElementById('file-picker-name');
-const filePickerLabel = document.getElementById('file-picker-label');
+const uiSelectionBanner = document.getElementById('selection-banner');
+const uiSelectionPreview = document.getElementById('selection-text-preview');
+const btnClearSelection = document.getElementById('btn-clear-selection');
 
 // Variables d'état
 let currentSelectedNotebookId = null;
 let allNotebooksCache = [];
-let currentFormat = "pdf"; // "pdf", "md", "url", "screenshot" ou "direct"
-let detectedFileInfo = null; // { directImport, mimeType, label, category, isLocal }
-let pickedFileDataUri = null; // File picker : data URI du fichier sélectionné
-let pickedFileName = null;   // File picker : nom du fichier sélectionné
-
-// Détection du mode fenêtre (vs popup)
-const isWindowMode = new URLSearchParams(window.location.search).has('window');
+let currentFormat = "pdf";
+let detectedFileInfo = null;
+let pendingSelection = null; // Sélection en attente (capturée via le menu contextuel)
 
 // Helper : créer un placeholder textuel sécurisé (remplace innerHTML)
 function setPlaceholder(container, text, style) {
@@ -115,31 +110,26 @@ document.addEventListener('DOMContentLoaded', () => {
      });
    }
 
-   // File picker : lecture du fichier sélectionné
-   if (filePickerInput) {
-     filePickerInput.addEventListener('change', (e) => {
-       const file = e.target.files[0];
-       if (!file) return;
-       
-       pickedFileName = file.name;
-       filePickerName.textContent = file.name;
-       
-       // Lire le fichier en data URI
-       const reader = new FileReader();
-       reader.onload = (evt) => {
-         pickedFileDataUri = evt.target.result;
-         // Activer le bouton d'import si un carnet est sélectionné
-         if (currentSelectedNotebookId) {
-           btnCapture.disabled = false;
-         }
+   // Bouton Annuler la sélection
+   if (btnClearSelection) {
+     btnClearSelection.addEventListener('click', async () => {
+       await browser.storage.local.remove('nwc_pending_selection');
+       pendingSelection = null;
+       uiSelectionBanner.classList.add('hidden');
+       // Restaurer le format précédent
+       if (currentFormat === 'selection') {
+         currentFormat = 'pdf';
+         uiFormatToggle.querySelector('[data-format="pdf"]').classList.add('active');
          updateCaptureButtonLabel();
-       };
-       reader.readAsDataURL(file);
+       }
      });
    }
 
    // Détection du type de fichier pour l'Import Direct
    detectActiveTabFileType();
+
+   // Vérifier s'il y a une sélection en attente (capturée via le menu contextuel)
+   checkPendingSelection();
 });
 
 function loadNotebooks() {
@@ -245,24 +235,23 @@ function startCaptureProcess() {
      return;
    }
 
-   // Mode fichier local : envoyer le fichier du picker
-   if (currentFormat === 'direct' && detectedFileInfo?.isLocal) {
-     if (!pickedFileDataUri || !pickedFileName) {
-       updateStatus("Veuillez d'abord sélectionner un fichier.", "error");
-       return;
-     }
-     
+   // Mode sélection : envoyer le texte capturé
+   if (currentFormat === 'selection' && pendingSelection) {
      btnCapture.disabled = true;
      uiSearchInput.disabled = true;
      btnCustomSpinner.classList.remove('hidden');
-     updateStatus("⚡ Import du fichier local...", "info");
+     updateStatus("📋 Import de la sélection...", "info");
      
      browser.runtime.sendMessage({
-       action: "UPLOAD_FILE_PICKER",
+       action: "START_CAPTURE",
        notebookId: currentSelectedNotebookId,
-       fileDataUri: pickedFileDataUri,
-       filename: pickedFileName
+       format: 'selection',
+       selectionData: pendingSelection
      });
+     
+     // Nettoyer la sélection en attente
+     browser.storage.local.remove('nwc_pending_selection');
+     pendingSelection = null;
      return;
    }
 
@@ -286,19 +275,15 @@ function startCaptureProcess() {
  */
 function updateCaptureButtonLabel() {
    const btnText = btnCapture.querySelector('.btn-text');
-   if (currentFormat === 'direct' && detectedFileInfo?.isLocal) {
-     // Mode fichier local : le bouton upload le fichier du picker
-     btnText.textContent = pickedFileDataUri ? '⚡ Importer le fichier' : '⚡ Sélectionnez un fichier';
-   } else {
-     const labels = {
-       pdf: 'Capturer la page',
-       md: 'Capturer la page',
-       url: "Importer l'URL",
-       screenshot: '📸 Capturer le viewport',
-       direct: 'Importer'
-     };
-     btnText.textContent = labels[currentFormat] || 'Capturer la page';
-   }
+   const labels = {
+     pdf: 'Capturer la page',
+     md: 'Capturer la page',
+     url: "Importer l'URL",
+     screenshot: '📸 Capturer le viewport',
+     direct: 'Importer',
+     selection: '📋 Importer la sélection'
+   };
+   btnText.textContent = labels[currentFormat] || 'Capturer la page';
 }
 
 /**
@@ -319,34 +304,15 @@ async function detectActiveTabFileType() {
        uiDirectLabel.textContent = `Import direct (${result.label})`;
        uiDirectImportSection.classList.remove('hidden');
 
-       if (result.isLocal) {
-         // === Fichier local ===
-         // Griser TOUS les boutons de format (rien ne marche sur file://)
+      if (result.isLocal) {
+         // === Fichier local : tout griser + message informatif ===
          uiFormatToggle.querySelectorAll('.format-btn').forEach(b => {
            b.classList.add('btn-disabled');
            b.classList.remove('active');
          });
+         btnDirectImport.classList.add('btn-disabled');
          currentFormat = 'direct';
-
-         if (isWindowMode) {
-           // Mode fenêtre : file picker fonctionne normalement
-           btnDirectImport.classList.add('hidden');
-           uiFilePickerSection.classList.remove('hidden');
-           filePickerLabel.textContent = `📂 Sélectionner le ${result.label}`;
-         } else {
-           // Mode popup : ouvrir la fenêtre détachée au lieu du picker
-           btnDirectImport.classList.add('hidden');
-           uiFilePickerSection.classList.remove('hidden');
-           filePickerLabel.textContent = `📂 Ouvrir l'importateur`;
-           // Remplacer le comportement du file picker par l'ouverture de la fenêtre
-           filePickerLabel.removeAttribute('for'); // Déconnecter du <input>
-           filePickerLabel.style.cursor = 'pointer';
-           filePickerLabel.addEventListener('click', () => {
-             browser.runtime.sendMessage({ action: "OPEN_CLIPPER_WINDOW" });
-             window.close();
-           });
-         }
-         
+         updateStatus("⚠️ Fichier local — l'import direct n'est pas disponible.", "info");
          updateCaptureButtonLabel();
        } else {
          // === Fichier distant : bouton Import Direct normal ===
@@ -397,6 +363,45 @@ function applyButtonVisibility(fileInfo) {
      btnDirectImport.classList.add('active');
      currentFormat = 'direct';
      updateCaptureButtonLabel();
+   }
+}
+
+/**
+ * Vérifie s'il y a une sélection de texte en attente (capturée via le menu contextuel).
+ * Si oui, affiche le bandeau et bascule sur le format "selection".
+ */
+async function checkPendingSelection() {
+   try {
+     const data = await browser.storage.local.get('nwc_pending_selection');
+     const sel = data.nwc_pending_selection;
+     
+     if (!sel || !sel.text) return;
+     
+     // Ignorer les sélections trop anciennes (> 5 min)
+     if (Date.now() - sel.timestamp > 5 * 60 * 1000) {
+       await browser.storage.local.remove('nwc_pending_selection');
+       return;
+     }
+     
+     pendingSelection = sel;
+     
+     // Afficher le bandeau avec aperçu
+     const wordCount = sel.text.split(/\s+/).filter(w => w.length > 0).length;
+     const preview = sel.text.substring(0, 60) + (sel.text.length > 60 ? '…' : '');
+     uiSelectionPreview.textContent = `📋 "${preview}" (${wordCount} mots)`;
+     uiSelectionBanner.classList.remove('hidden');
+     
+     // Basculer sur le format "selection"
+     uiFormatToggle.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+     currentFormat = 'selection';
+     updateCaptureButtonLabel();
+     
+     // Activer le bouton si un carnet est déjà sélectionné
+     if (currentSelectedNotebookId) {
+       btnCapture.disabled = false;
+     }
+   } catch (e) {
+     console.warn('[Popup] Erreur vérification sélection:', e.message);
    }
 }
 

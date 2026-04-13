@@ -29,6 +29,21 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // return true = on va répondre de manière asynchrone
     return true;
   }
+
+  // Capturer le HTML de la sélection (demandé par le menu contextuel)
+  if (message.action === "GET_SELECTION_HTML") {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      const fragment = range.cloneContents();
+      const wrapper = document.createElement('div');
+      wrapper.appendChild(fragment);
+      sendResponse({ html: wrapper.innerHTML });
+    } else {
+      sendResponse({ html: null });
+    }
+    return;
+  }
 });
 
 async function handleCapture(format) {

@@ -141,34 +141,56 @@ async function detectFileType(url) {
     return { directImport: false };
 }
 
-// ═══ Menu Contextuel ═══
-// Créer l'entrée de menu au clic droit → ouvre la fenêtre NWC détachée
+// ═══ Menu Contextuel : Capture de sélection ═══
 browser.runtime.onInstalled.addListener(() => {
     browser.contextMenus.create({
-        id: "nwc-open-clipper",
-        title: "📎 Importer dans NotebookLM",
-        contexts: ["page", "image", "audio", "video", "link"]
+        id: "nwc-clip-selection",
+        title: "📎 Clipper la sélection dans NotebookLM",
+        contexts: ["selection"]
     });
 });
 
-browser.contextMenus.onClicked.addListener((info, tab) => {
-    if (info.menuItemId === "nwc-open-clipper") {
-        openClipperWindow();
+browser.contextMenus.onClicked.addListener(async (info, tab) => {
+    if (info.menuItemId === "nwc-clip-selection" && info.selectionText) {
+        // 1. Capturer le HTML formaté via le content script (si disponible)
+        let selectionHtml = null;
+        try {
+            const response = await browser.tabs.sendMessage(tab.id, {
+                action: "GET_SELECTION_HTML"
+            });
+            if (response?.html) {
+                selectionHtml = response.html;
+            }
+        } catch (e) {
+            console.warn("[Background] Content script inaccessible, fallback texte brut.");
+        }
+
+        // 2. Stocker la sélection dans storage.local
+        await browser.storage.local.set({
+            nwc_pending_selection: {
+                text: info.selectionText,
+                html: selectionHtml,
+                pageUrl: info.pageUrl || tab.url,
+                pageTitle: tab.title,
+                timestamp: Date.now()
+            }
+        });
+
+        // 3. Tenter d'ouvrir la popup
+        try {
+            await browser.action.openPopup();
+        } catch (e) {
+            // Fallback : notification pour guider l'utilisateur
+            console.warn("[Background] openPopup() échoué:", e.message);
+            browser.notifications.create("nwc-selection-ready", {
+                type: "basic",
+                iconUrl: browser.runtime.getURL("icons/icon.svg"),
+                title: "Sélection capturée ✓",
+                message: "Cliquez sur le bouton NotebookLM Web Clipper pour choisir un carnet."
+            });
+        }
     }
 });
-
-/**
- * Ouvre la fenêtre NWC détachée (utilisable depuis le menu contextuel ou la popup).
- * Utilise popup.html?window=1 pour réutiliser le même code sans duplication.
- */
-function openClipperWindow() {
-    browser.windows.create({
-        url: browser.runtime.getURL("src/popup/popup.html?window=1"),
-        type: "popup",
-        width: 420,
-        height: 520
-    });
-}
 
 // Routeur Principal recevant les messages de la Popup et du Content Script
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -331,64 +353,63 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true;
     }
 
-    // Ouvrir la fenêtre NWC détachée (demandé par la popup en mode local)
-    if (message.action === "OPEN_CLIPPER_WINDOW") {
-        openClipperWindow();
-        return;
-    }
-
-    // Upload d'un fichier local sélectionné via le file picker de la popup
-    if (message.action === "UPLOAD_FILE_PICKER") {
-        (async () => {
-            try {
-                notifyUI("STATUS_UPDATE", { text: "⚡ Upload du fichier...", status: "info" });
-                
-                const cookieString = await getPersonalAuthCookies();
-                const data = await browser.storage.local.get('nblm_active_authuser');
-                const activeIndex = data.nblm_active_authuser !== undefined ? data.nblm_active_authuser : 0;
-                await fetchCSRFToken(cookieString, activeIndex);
-                
-                // Convertir le data URI en Blob
-                const base64 = message.fileDataUri.split(',')[1];
-                const mimeType = message.fileDataUri.match(/^data:([^;]+)/)?.[1] || 'application/octet-stream';
-                const binaryStr = atob(base64);
-                const bytes = new Uint8Array(binaryStr.length);
-                for (let i = 0; i < binaryStr.length; i++) {
-                    bytes[i] = binaryStr.charCodeAt(i);
-                }
-                const blob = new Blob([bytes], { type: mimeType });
-                
-                await uploadFileBlob(message.notebookId, blob, message.filename, activeIndex);
-                
-                const notebookUrl = `https://notebooklm.google.com/notebook/${message.notebookId}`;
-                notifyUI("STATUS_UPDATE", { 
-                    text: "✅ Fichier importé !", 
-                    status: "success",
-                    linkUrl: notebookUrl,
-                    showDownload: false
-                });
-                
-                // Notification OS
-                browser.notifications.create({
-                    type: "basic",
-                    iconUrl: browser.runtime.getURL("icons/icon.svg"),
-                    title: "NotebookLM Web Clipper",
-                    message: `"${message.filename}" importé avec succès !`
-                });
-            } catch (err) {
-                console.error("[Background] Échec upload fichier picker:", err.message);
-                notifyUI("STATUS_UPDATE", { text: err.message, status: "error" });
-            }
-        })();
-        return true;
-    }
-
     if (message.action === "START_CAPTURE") {
-        executeCaptureAndUploadWorkflow(message.notebookId, message.format || "pdf")
-            .catch(err => {
-                console.error("[Clipper Background] Erreur globale :", err);
-                notifyUI("STATUS_UPDATE", { text: err.message, status: "error" });
-            });
+        // Import de sélection : pipeline simplifié (texte → addTextSource)
+        if (message.format === 'selection' && message.selectionData) {
+            (async () => {
+                try {
+                    const sel = message.selectionData;
+                    const cookieString = await getPersonalAuthCookies();
+                    const data = await browser.storage.local.get('nblm_active_authuser');
+                    const activeIndex = data.nblm_active_authuser !== undefined ? data.nblm_active_authuser : 0;
+                    await fetchCSRFToken(cookieString, activeIndex);
+
+                    let finalNotebookId = message.notebookId;
+                    if (finalNotebookId === "CREATE_NEW") {
+                        notifyUI("STATUS_UPDATE", { text: "Création du carnet...", status: "info" });
+                        const title = `Capture - ${new Date().toLocaleDateString()}`;
+                        finalNotebookId = await createPersonalNotebook(title, activeIndex);
+                    }
+                    if (!finalNotebookId) throw new Error("Échec de la récupération de l'ID du carnet.");
+
+                    notifyUI("STATUS_UPDATE", { text: "📋 Upload de la sélection...", status: "info" });
+
+                    // Construire le texte avec métadonnées de grounding
+                    const header = `Source: ${sel.pageUrl}\nTitre: ${sel.pageTitle}\nDate de capture: ${new Date().toLocaleString()}\n\n---\n\n`;
+                    const content = header + sel.text;
+
+                    const cleanTitle = (sel.pageTitle || 'Sélection')
+                        .replace(/[<>:"/\\|?*]/g, '').trim().substring(0, 80);
+
+                    await addTextSource(finalNotebookId, content, `📋 ${cleanTitle}`, activeIndex);
+
+                    const notebookUrl = `https://notebooklm.google.com/notebook/${finalNotebookId}`;
+                    notifyUI("STATUS_UPDATE", {
+                        text: "✅ Sélection importée !",
+                        status: "success",
+                        linkUrl: notebookUrl,
+                        showDownload: false
+                    });
+
+                    browser.notifications.create({
+                        type: "basic",
+                        iconUrl: browser.runtime.getURL("icons/icon.svg"),
+                        title: "NotebookLM Web Clipper",
+                        message: `Sélection importée depuis "${cleanTitle}"`
+                    });
+                } catch (err) {
+                    console.error("[Background] Échec import sélection:", err.message);
+                    notifyUI("STATUS_UPDATE", { text: err.message, status: "error" });
+                }
+            })();
+        } else {
+            // Formats classiques : PDF, MD, URL, Screenshot, Direct
+            executeCaptureAndUploadWorkflow(message.notebookId, message.format || "pdf")
+                .catch(err => {
+                    console.error("[Clipper Background] Erreur globale :", err);
+                    notifyUI("STATUS_UPDATE", { text: err.message, status: "error" });
+                });
+        }
     }
 
     return true;
