@@ -99,7 +99,10 @@ Quand un fichier est détecté (ex: image, audio), les boutons non pertinents so
 | **Image** | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
 | **Audio / Vidéo** | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ |
 | **Google Docs / Sheets / Slides** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Fichier Drive hébergé** | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
 | **Fichier local (file://)** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+> **Note** : Sur un fichier hébergé sur Google Drive (`drive.google.com/file/d/...`), la synchronisation Drive ne fonctionne que pour les documents textuels (PDF, DOCX, XLSX, PPTX...). Pour les images et médias, utilisez le mode 📸 Screenshot.
 
 ### Double authentification
 
