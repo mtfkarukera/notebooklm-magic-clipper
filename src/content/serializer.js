@@ -127,7 +127,7 @@ window.ClipperSerializer = {
       // Fallback : si Readability échoue, on utilise le body nettoyé
       console.log("[Serializer V9] ⚠️ Readability: échec, fallback DOM complet");
       this._cleanDomFallback(wrapperClone);
-      contentHtml = wrapperClone.innerHTML;
+      contentHtml = new XMLSerializer().serializeToString(wrapperClone);
       title = null;
       byline = null;
       siteName = null;

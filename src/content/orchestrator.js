@@ -38,7 +38,8 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const fragment = range.cloneContents();
       const wrapper = document.createElement('div');
       wrapper.appendChild(fragment);
-      sendResponse({ html: wrapper.innerHTML });
+      const serializer = new XMLSerializer();
+      sendResponse({ html: serializer.serializeToString(wrapper) });
     } else {
       sendResponse({ html: null });
     }
