@@ -41,6 +41,7 @@
       <button class="format-btn" data-format="md" title="Tables parfaites, ultra-léger, natif Gemini">📝 Markdown</button>
       <button class="format-btn" data-format="url" title="Import instantané — NotebookLM scrape la page">🔗 URL</button>
       <button class="format-btn" data-format="screenshot" title="Capture le viewport visible en PNG">📸</button>
+      <button class="format-btn" data-format="drive" id="btn-drive-import" style="display: none;" title="Synchronisation native Google Drive">☁️ Drive</button>
     </div>
     <!-- Bouton Import Direct : masqué par défaut, affiché dynamiquement -->
     <div id="direct-import-section" class="direct-import-section hidden">
@@ -75,6 +76,7 @@
   <!-- BOUTON FERMER (Autonome, pour mobile et desktop) -->
   <button id="btn-close" class="btn close-btn">✖ Fermer</button>
 
+  <script src="../shared/utils.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

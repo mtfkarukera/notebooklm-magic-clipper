@@ -1,6 +1,6 @@
 // background.js : Event Page MV3, Routeur central Asynchrone
 import { getPersonalAuthCookies, fetchCSRFToken } from './api/auth_personal.js';
-import { createPersonalNotebook, uploadPersonalSource, addTextSource, addUrlSource, addYouTubeSource } from './api/rpc_client.js';
+import { createPersonalNotebook, uploadPersonalSource, addTextSource, addUrlSource, addYouTubeSource, addDriveSource } from './api/rpc_client.js';
 
 /**
  * Taille Max de PDF imposée par Google : 200 MB
@@ -552,6 +552,36 @@ async function executeCaptureAndUploadWorkflow(targetNotebookId, format) {
         const notebookUrl = `https://notebooklm.google.com/notebook/${finalNotebookId}`;
         notifyUI("STATUS_UPDATE", { 
             text: `✅ Fichier importé directement !`, 
+            status: "success",
+            linkUrl: notebookUrl,
+            showDownload: false
+        });
+
+    } else if (format === "drive") {
+        // ═══ Pipeline Google Drive NATIF ═══
+        notifyUI("STATUS_UPDATE", { text: "☁️ Liaison avec le Google Drive...", status: "info" });
+        
+        let typeStr, fileId, mimeType = '';
+        const match = pageUrl.match(/\/(document|spreadsheets|presentation)\/d\/([a-zA-Z0-9-_]+)/);
+        if (match) {
+            typeStr = match[1];
+            fileId = match[2];
+            if (typeStr === 'document') mimeType = 'application/vnd.google-apps.document';
+            else if (typeStr === 'spreadsheets') mimeType = 'application/vnd.google-apps.spreadsheet';
+            else if (typeStr === 'presentation') mimeType = 'application/vnd.google-apps.presentation';
+        }
+
+        if (!fileId) {
+            throw new Error("URL Google Drive non reconnue ou invalide.");
+        }
+
+        let driveTitle = pageTitle.replace(/ - Google (Docs|Sheets|Slides)/, '').trim();
+
+        await addDriveSource(finalNotebookId, fileId, mimeType, driveTitle, activeIndex);
+
+        const notebookUrl = `https://notebooklm.google.com/notebook/${finalNotebookId}`;
+        notifyUI("STATUS_UPDATE", { 
+            text: "✅ Document Google Drive synchronisé !", 
             status: "success",
             linkUrl: notebookUrl,
             showDownload: false

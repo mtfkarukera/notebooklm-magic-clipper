@@ -300,6 +300,41 @@ export async function addUrlSource(notebookId, url, authuserIndex = 0) {
 }
 
 /**
+ * Ajoute une source Google Drive (Docs, Sheets, Slides) directement dans NotebookLM.
+ * Utilise l'ID du fichier pur pour que NotebookLM crée un lien synchronisable natif.
+ * Utilise le RPC izAoDd avec le payload typique pour Drive (Slot 0).
+ *
+ * @param {string} notebookId - ID du carnet cible.
+ * @param {string} fileId - ID du fichier Google Drive extrait de l'URL.
+ * @param {string} mimeType - Type MIME (ex: application/vnd.google-apps.document).
+ * @param {string} title - Titre du document.
+ */
+export async function addDriveSource(notebookId, fileId, mimeType, title, authuserIndex = 0) {
+    const rpcId = "izAoDd";
+    
+    // Le bloc Google Drive est au slot 0 (vs slot 1 pour Texte et slot 2 pour URL)
+    const driveBlock = [
+        [fileId, mimeType, 1, title],
+        null, null, null, null, null, null, null, null, null, 1
+    ];
+
+    const params = [
+        [[driveBlock, null, null, null, null, null, null, null]],
+        notebookId,
+        [2],
+        [1, null, null, null, null, null, null, null, null, null, [1]]
+    ];
+    
+    const result = await sendBatchExecute(rpcId, params, authuserIndex);
+    
+    if (result) {
+        console.log("[NotebookLM RPC] ✅ Source Google Drive ajoutée.");
+    }
+    
+    return true;
+}
+
+/**
  * Ajoute une source YouTube dans un carnet NotebookLM.
  * Contrairement à addUrlSource (URL générique), ce payload spécialisé
  * déclenche le pipeline YouTube natif de Google : extraction du transcript,

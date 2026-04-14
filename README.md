@@ -1,14 +1,14 @@
 # 📎 NotebookLM Web Clipper — Extension Firefox MV3
 
-Capturez le contenu de n'importe quelle page web et importez-le directement dans un carnet **Google NotebookLM** — en **PDF**, **Markdown**, **URL directe**, **Screenshot**, **Import Direct** ou **Sélection de texte**. Compatible **Firefox Desktop et Android**. Optimisé pour l'analyse par Gemini (grounding IA intégré).
+Capturez le contenu de n'importe quelle page web et importez-le directement dans un carnet **Google NotebookLM** — en **PDF**, **Markdown**, **URL directe**, **Screenshot**, **Import Direct**, **Sélection de texte** ou **☁️ Google Drive natif**. Compatible **Firefox Desktop et Android**. Optimisé pour l'analyse par Gemini (grounding IA intégré).
 
 ---
 
 ## ✨ Fonctionnalités
 
 | Fonctionnalité | Description |
-|---|---|
-| **6 modes d'import** | 📄 PDF, 📝 Markdown, 🔗 URL, 📸 Screenshot, ⚡ Import Direct, 📋 Sélection |
+| --- | --- |
+| **7 modes d'import** | 📄 PDF, 📝 Markdown, 🔗 URL, 📸 Screenshot, ⚡ Import Direct, 📋 Sélection, ☁️ Google Drive |
 | **📸 Screenshot** | Capture le viewport visible en PNG via `captureVisibleTab()` |
 | **⚡ Import Direct** | Détecte et importe ~50 types de fichiers (PDF, images, audio, vidéo, documents) |
 | **📋 Clip de sélection** | Clic droit → « 📎 Clipper la sélection » → import du texte sélectionné |
@@ -25,24 +25,26 @@ Capturez le contenu de n'importe quelle page web et importez-le directement dans
 | **Multi-comptes** | Sélecteur de compte Google intégré dans la popup |
 | **Notification OS** | Notification système si la popup est fermée pendant l'import |
 | **Compatible Mobile** | Firefox Android : popup responsive, touch targets 48dp, détection plateforme |
+| **☁️ Google Drive natif** | Import synchronisable de Google Docs, Sheets et Slides — bouton "Sync" préservé |
 
-### Comparaison des 6 modes
+### Comparaison des 7 modes
 
-| Critère | 📄 PDF | 📝 Markdown | 🔗 URL | 📸 Screenshot | ⚡ Direct | 📋 Sélection |
-|---|---|---|---|---|---|---|
-| **Vitesse** | ~3-5s | ~0.5s | **~0.1s** | ~1s | ~1-3s | ~0.5s |
-| **Tables** | ❌ | ✅ Pipe-delimited | ✅ Scraping | ❌ Image | ❌ | ✅ Texte brut |
-| **Images** | ✅ Data URI | ❌ | ✅ Scraping | ✅ Viewport | ✅ Original | ❌ |
-| **Pages protégées** | ✅ | ✅ | ❌ Paywall | ✅ | ✅ | ✅ |
-| **Téléchargement** | ✅ .pdf | ✅ .md | ❌ | ❌ | ❌ | ❌ |
-| **Fichiers binaires** | ❌ | ❌ | ❌ | ❌ | ✅ ~50 formats | ❌ |
+| Critère | 📄 PDF | 📝 Markdown | 🔗 URL | 📸 Screenshot | ⚡ Direct | 📋 Sélection | ☁️ Drive |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| **Vitesse** | ~3-5s | ~0.5s | **~0.1s** | ~1s | ~1-3s | ~0.5s | **~0.1s** |
+| **Synchronisable** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Tables** | ❌ | ✅ Pipe-delimited | ✅ Scraping | ❌ Image | ❌ | ✅ Texte brut | ✅ Natif |
+| **Images** | ✅ Data URI | ❌ | ✅ Scraping | ✅ Viewport | ✅ Original | ❌ | ✅ Natif |
+| **Pages protégées** | ✅ | ✅ | ❌ Paywall | ✅ | ✅ | ✅ | ✅ |
+| **Téléchargement** | ✅ .pdf | ✅ .md | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Fichiers binaires** | ❌ | ❌ | ❌ | ❌ | ✅ ~50 formats | ❌ | ❌ |
 
 ### ⚡ Formats supportés par l'Import Direct
 
 L'Import Direct détecte automatiquement le type de fichier (via l'extension URL + `HEAD` request) et l'importe tel quel dans NotebookLM :
 
 | Catégorie | Formats |
-|---|---|
+| --- | --- |
 | **Documents** | PDF, TXT, MD, DOCX, CSV, PPTX, EPUB |
 | **Images** | PNG, JPEG, GIF, BMP, WebP, AVIF, TIFF, ICO, JP2, HEIC, HEIF |
 | **Audio** | MP3, WAV, OGG, AAC, M4A, AIFF, MIDI, OPUS, AMR, WMA, RA, AU |
@@ -56,11 +58,11 @@ Sélectionnez du texte sur n'importe quelle page, faites un clic droit → **« 
 
 ## 🏗️ Architecture
 
-```
+```text
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────────┐
 │   Popup (UI)    │────▶│  Background.js   │────▶│  NotebookLM API     │
 │  popup.html/js  │     │  (Event Page)    │     │  /batchexecute      │
-│  6 modes import │     │  Routeur central │     │  /upload/_/         │
+│  7 modes import │     │  Routeur central │     │  /upload/_/         │
 │  Toggle format  │     │  CORS proxy img  │     │                     │
 │  Sélection clip │     │  Context menu    │     │                     │
 └─────────────────┘     └──────┬───────────┘     └─────────────────────┘
@@ -74,33 +76,35 @@ Sélectionnez du texte sur n'importe quelle page, faites un clic droit → **« 
                         └──────────────────┘
 ```
 
-### 6 pipelines d'import
+### 7 pipelines d'import
 
 | Mode | Pipeline | RPC |
-|---|---|---|
+| --- | --- | --- |
 | **📄 PDF** | Content Script → Serializer → jsPDF → Upload resumable 3 étapes | `o4cbdc` + upload |
 | **📝 Markdown** | Content Script → Serializer → MD Generator → RPC texte direct | `izAoDd` (Text) |
 | **🔗 URL** | Zéro content script → URL de l'onglet envoyée directement | `izAoDd` (URL) |
 | **📸 Screenshot** | `captureVisibleTab()` → PNG Blob → Upload resumable | upload |
 | **⚡ Direct** | Détection MIME → `fetch()` binaire → Upload resumable | upload |
 | **📋 Sélection** | Menu contextuel → `GET_SELECTION_HTML` → `addTextSource` | `izAoDd` (Text) |
+| **☁️ Drive** | Extraction File ID → `addDriveSource` → lien natif synchronisable | `izAoDd` (Drive) |
 
 ### Matrice de visibilité dynamique
 
 Quand un fichier est détecté (ex: image, audio), les boutons non pertinents sont automatiquement grisés :
 
-| Type détecté | PDF | MD | URL | 📸 | ⚡ Direct |
-|---|---|---|---|---|---|
-| **Page web** | ✅ | ✅ | ✅ | ✅ | ❌ |
-| **Document (PDF, DOCX...)** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Image** | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Audio / Vidéo** | ❌ | ❌ | ✅ | ❌ | ✅ |
-| **Fichier local (file://)** | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Type détecté | PDF | MD | URL | 📸 | ⚡ Direct | ☁️ Drive |
+| --- | --- | --- | --- | --- | --- | --- |
+| **Page web** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| **Document (PDF, DOCX...)** | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| **Image** | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| **Audio / Vidéo** | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ |
+| **Google Docs / Sheets / Slides** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Fichier local (file://)** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ### Double authentification
 
 | Type de compte | Méthode | Module |
-|---|---|---|
+| --- | --- | --- |
 | **Personnel** | Extraction cookies (`SID`, `HSID`, `SSID`) + CSRF | `auth_personal.js` + `rpc_client.js` |
 | **Workspace** | OAuth 2.0 + API Discovery Engine | `auth_workspace.js` |
 
@@ -159,7 +163,7 @@ npm install -g web-ext
 
 ## 📁 Structure du projet
 
-```
+```text
 notebooklm-pdf-clipper/
 ├── manifest.json                   # Manifest V3 Firefox (Event Page)
 ├── lib/
@@ -167,22 +171,22 @@ notebooklm-pdf-clipper/
 │   └── Readability.js             # Mozilla Readability.js
 ├── src/
 │   ├── background/
-│   │   ├── background.js           # Routeur central + 6 pipelines + menu contextuel
+│   │   ├── background.js           # Routeur central + 7 pipelines + menu contextuel
 │   │   └── api/
 │   │       ├── auth_personal.js    # Extraction cookies + CSRF
 │   │       ├── auth_workspace.js   # OAuth 2.0 Discovery Engine
-│   │       └── rpc_client.js       # batchexecute + upload + addText + addUrl
+│   │       └── rpc_client.js       # batchexecute + upload + addText + addUrl + addDrive
 │   ├── content/
 │   │   ├── orchestrator.js         # Point d'entrée (route PDF/MD + GET_SELECTION_HTML)
 │   │   ├── serializer.js           # Readability + Reader Mode CSS + data URIs
 │   │   ├── pdf_generator.js        # jsPDF (texte + images + tables)
 │   │   └── md_generator.js         # Markdown (tables pipe-delimited)
 │   ├── popup/
-│   │   ├── popup.html              # Interface avec toggle 6 formats + bandeau sélection
+│   │   ├── popup.html              # Interface avec toggle 7 formats + bandeau sélection
 │   │   ├── popup.css               # Design Glassmorphism
-│   │   └── popup.js                # Logique UI + toggle + détection + sélection
+│   │   └── popup.js                # Logique UI + toggle + détection Drive + sélection
 │   └── shared/
-│       └── utils.js                # Utilitaires (blobToBase64)
+│       └── utils.js                # Utilitaires (blobToBase64, parseDriveUrl)
 ├── dist/                           # XPI empaquetés
 ├── sign.sh                         # Script de signature AMO
 └── .gitignore
@@ -193,7 +197,7 @@ notebooklm-pdf-clipper/
 ## ⚙️ Décisions techniques clés
 
 | Problème | Solution |
-|---|---|
+| --- | --- |
 | `html2canvas` → `SecurityError` en MV3 | **jsPDF direct** avec rendu manuel |
 | Images cross-origin | **Tainted Canvas Protection** : proxy CORS background → data URIs |
 | Pages polluées | **Readability.js** extrait le contenu principal |
@@ -202,6 +206,7 @@ notebooklm-pdf-clipper/
 | Capture visuelle exacte | **`captureVisibleTab()`** → PNG → upload resumable |
 | Fichiers binaires (PDF, audio, vidéo...) | **Import Direct** : détection MIME + `fetch()` + upload resumable |
 | Texte sélectionné | **Menu contextuel** → `GET_SELECTION_HTML` → `addTextSource` |
+| Google Docs/Sheets/Slides non importables | **Mode Drive** : extraction File ID + RPC `izAoDd` Slot 0 → lien synchronisable |
 | CORS sur API NotebookLM | `fetch()` dans le **background script** (exempt CORS) |
 | Firefox ne supporte pas `service_worker` | `background.scripts` + `"type": "module"` |
 | Upload PDF ignoré | **Protocole resumable** 3 étapes |
@@ -211,7 +216,15 @@ notebooklm-pdf-clipper/
 
 ## 📋 Changelog récent
 
+### v4.5.0 — Import Google Drive natif
+
+- **☁️ Google Drive** : 7ème mode d'import — liaison synchronisable avec Google Docs, Sheets et Slides
+- **Détection automatique** : le bouton Drive apparaît exclusivement sur les URLs Google Workspace
+- **Zéro sérialisation** : l'extension envoie directement le File ID via RPC, préservant le bouton natif "Cliquer pour synchroniser" dans NotebookLM
+- **UX épurée** : sur un Google Doc, seul le bouton Drive est visible (les autres formats sont masqués)
+
 ### v4.4.0 — Optimisation & Stabilité
+
 - **Fix critique** : paramètres `title`/`content` inversés dans l'import de sélection
 - **Sécurité** : tous les boutons de format grisés quand une sélection est active
 - **Stabilité mobile** : `contextMenus.removeAll()` + guard `?.onClicked` (évite le crash Android)
@@ -221,6 +234,7 @@ notebooklm-pdf-clipper/
 - **Logs** : réduction drastique de la verbosité console (conformité AMO)
 
 ### v4.3.x — Fonctionnalités
+
 - **📋 Clip de sélection** via menu contextuel → import texte source
 - **📸 Screenshot** mode captureVisibleTab → PNG
 - **⚡ Import Direct** ~50 formats avec détection MIME + HEAD request
@@ -230,13 +244,12 @@ notebooklm-pdf-clipper/
 
 ## 📝 Crédits et références
 
-- **[notebooklm-py](https://github.com/teng-lin/notebooklm-py)** — Rétro-ingénierie API RPC NotebookLM
-- **[jsPDF](https://github.com/parallax/jsPDF)** — Génération PDF côté client
+- **[notebooklm-py](https://github.com/teng-lin/notebooklm-py)** — Rétro-ingénierie API RPC NotebookLM (source du payload Google Drive)
+- **[jsPDF](https://github.com/parallaxis/jsPDF)** — Génération PDF côté client
 - **[Readability.js](https://github.com/mozilla/readability)** — Extraction contenu principal
 - **Mozilla WebExtensions** — [Documentation MV3](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions)
 
 ---
 
 *Projet développé selon la méthodologie **Spec-Driven Development (SDD)**.*
-*Version 4.4.1 — Avril 2026*
-
+*Version 4.5.0 — Avril 2026*

@@ -268,7 +268,7 @@ function startCaptureProcess() {
    uiSearchInput.disabled = true;
    btnCustomSpinner.classList.remove('hidden');
 
-   const formatLabels = { pdf: 'PDF', md: 'Markdown', url: 'URL', screenshot: 'Screenshot', direct: 'Import direct' };
+   const formatLabels = { pdf: 'PDF', md: 'Markdown', url: 'URL', screenshot: 'Screenshot', direct: 'Import direct', drive: 'Google Drive' };
    const label = formatLabels[currentFormat] || currentFormat;
    updateStatus(`Import en ${label}...`, "info");
 
@@ -290,7 +290,8 @@ function updateCaptureButtonLabel() {
      url: "Importer l'URL",
      screenshot: '📸 Capturer le viewport',
      direct: 'Importer',
-     selection: '📋 Importer la sélection'
+     selection: '📋 Importer la sélection',
+     drive: '☁️ Importer Google Drive'
    };
    btnText.textContent = labels[currentFormat] || 'Capturer la page';
 }
@@ -305,6 +306,31 @@ async function detectActiveTabFileType() {
      if (tabs.length === 0) return;
 
      const url = tabs[0].url;
+
+     // 1. Détection prioritaire Google Drive
+     if (window.ClipperUtils && window.ClipperUtils.parseDriveUrl) {
+         const driveInfo = window.ClipperUtils.parseDriveUrl(url);
+         if (driveInfo) {
+             const driveBtn = document.getElementById('btn-drive-import');
+             if (driveBtn) {
+                 driveBtn.style.display = 'flex';
+                 // Cacher complètement les modes inappropriés
+                 uiFormatToggle.querySelectorAll('.format-btn').forEach(b => {
+                     b.classList.remove('active');
+                     if (['pdf', 'md', 'url', 'screenshot'].includes(b.dataset.format)) {
+                         b.style.display = 'none'; // Masquage total selon ta demande
+                     }
+                 });
+                 driveBtn.classList.remove('hidden');
+                 driveBtn.classList.add('active');
+                 currentFormat = 'drive';
+                 updateCaptureButtonLabel();
+                 return; // Arrêter la détection, on est sur Drive
+             }
+         }
+     }
+
+     // 2. Fallback pour fichiers réguliers via background script
      const result = await browser.runtime.sendMessage({ action: "DETECT_FILE_TYPE", url });
      detectedFileInfo = result;
 
