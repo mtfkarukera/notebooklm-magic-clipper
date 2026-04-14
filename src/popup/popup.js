@@ -311,6 +311,20 @@ async function detectActiveTabFileType() {
      if (window.ClipperUtils && window.ClipperUtils.parseDriveUrl) {
          const driveInfo = window.ClipperUtils.parseDriveUrl(url);
          if (driveInfo) {
+             // Pour les fichiers hébergés (pas Workspace), vérifier le type
+             if (driveInfo.typeStr === 'file') {
+                 const SUPPORTED_DRIVE_MIMES = [
+                     'application/pdf', 'text/plain', 'text/markdown', 'text/csv',
+                     'application/epub+zip',
+                     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                     'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                 ];
+                 const guessedMime = window.ClipperUtils.guessMimeFromTitle(tabs[0].title);
+                 if (!SUPPORTED_DRIVE_MIMES.includes(guessedMime)) {
+                     return; // Fichier non supporté → boutons standard
+                 }
+             }
              const driveBtn = document.getElementById('btn-drive-import');
              if (driveBtn) {
                  driveBtn.style.display = 'flex';
