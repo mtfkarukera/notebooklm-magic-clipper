@@ -305,6 +305,18 @@ function updateCaptureButtonLabel() {
      drive: '☁️ Importer Google Drive'
    };
    btnText.textContent = labels[currentFormat] || 'Capturer la page';
+
+   // Affichage conditionnel du champ d'intention
+   const intentWrapper = document.getElementById('intent-wrapper');
+   if (intentWrapper) {
+     if (currentFormat === 'pdf' || currentFormat === 'md') {
+       intentWrapper.classList.remove('hidden');
+     } else {
+       intentWrapper.classList.add('hidden');
+       if (intentInput) intentInput.value = "";
+       if (intentCounter) intentCounter.textContent = "0 / 300";
+     }
+   }
 }
 
 /**
