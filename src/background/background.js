@@ -1,12 +1,108 @@
 // background.js : Event Page MV3, Routeur central Asynchrone
 import { getPersonalAuthCookies, fetchCSRFToken } from './api/auth_personal.js';
-import { createPersonalNotebook, uploadPersonalSource, addTextSource, addUrlSource, addYouTubeSource, addDriveSource } from './api/rpc_client.js';
+import { createPersonalNotebook, uploadPersonalSource, addTextSource, addUrlSource, addYouTubeSource, addDriveSource, RpcApiChangedError } from './api/rpc_client.js';
 
 /**
  * Taille Max de PDF imposée par Google : 200 MB
  * Un octet Base64 pèse plus lourd (ratio ~1.37), cette limite mathématique garantit le quota réel.
  */
 const MAX_BASE64_SIZE_BYTES = 200 * 1024 * 1024 * 1.37;
+
+/**
+ * Modèles RegEx pour détecter et masquer les données sensibles
+ * (cookies de session Google et jeton CSRF) dans les logs d'erreurs.
+ */
+const SENSITIVE_PATTERNS = [
+    /SID=[^;]+/gi,
+    /HSID=[^;]+/gi,
+    /SSID=[^;]+/gi,
+    /SAPISID=[^;]+/gi,
+    /__Secure-1PSID=[^;]+/gi,
+    /__Secure-3PSID=[^;]+/gi,
+    /SNlM0e[^"]+/gi,
+    /at=[^&]+/gi        // Token CSRF encodé dans les payloads
+];
+
+/**
+ * Purge un message d'erreur de toute donnée d'authentification sensible.
+ * @param {string|any} message - Le message d'erreur brut
+ * @returns {string} - Le message d'erreur sécurisé
+ */
+function sanitizeErrorMessage(message) {
+    if (typeof message !== "string") {
+        message = String(message);
+    }
+    
+    return SENSITIVE_PATTERNS.reduce(
+        (msg, pattern) => msg.replace(pattern, "[REDACTED]"),
+        message
+    );
+}
+
+/**
+ * Interface générique et sécurisée pour effectuer tout appel RPC ou processus asynchrone délicat.
+ * Intercepte les erreurs pour ne jamais exposer de données sensibles tout en notifiant l'utilisateur.
+ * @param {Function} rpcFn - Fonction asynchrone à isoler (reçoit notebookId en argument)
+ * @param {string} notebookId - ID du carnet ciblé
+ * @param {Function} sendResponse - Le callback de messagerie Firefox (MV3)
+ */
+async function safeRpcCall(rpcFn, notebookId, sendResponse) {
+    try {
+        const result = await rpcFn(notebookId);
+        sendResponse({ status: "success", data: result });
+    } catch (err) {
+
+        const rawMessage = err.message || "";
+
+        // Cas 1 : L'API Google a changé de structure
+        if (err instanceof RpcApiChangedError) {
+            console.error(`[NotebookLM][API_CHANGED] RPC: ${err.rpcId}`);
+            sendResponse({
+                status: "error",
+                userMessage: "L'API NotebookLM a été modifiée par Google. Une mise à jour de l'extension est requise.",
+                code: "API_CHANGED"
+            });
+
+        // Cas 2 : Session expirée (cookies périmés HTTP 401/403)
+        } else if (rawMessage.includes("401") || rawMessage.includes("403")) {
+            console.warn(`[NotebookLM][AUTH_EXPIRED]`);
+            await browser.storage.local.remove(['nblm_personal_cookie', 'nblm_csrf']).catch(() => {});
+            sendResponse({
+                status: "error",
+                userMessage: "Session expirée. Reconnecte-toi sur notebooklm.google.com.",
+                code: "AUTH_EXPIRED"
+            });
+
+        // Cas 3 : Upload resumable — URL de session absente
+        } else if (rawMessage.includes("x-goog-upload-url")) {
+            console.error(`[NotebookLM][UPLOAD_SESSION_MISSING]`, sanitizeErrorMessage(rawMessage));
+            sendResponse({
+                status: "error",
+                userMessage: "L'upload a échoué : impossible d'obtenir une session d'upload.",
+                code: "UPLOAD_SESSION_MISSING"
+            });
+
+        // Cas 4 : Erreur réseau / Timeout
+        } else if (err.name === "AbortError" || rawMessage.toLowerCase().includes("timeout")) {
+            console.warn(`[NotebookLM][TIMEOUT]`);
+            sendResponse({
+                status: "error",
+                userMessage: "Délai dépassé. Vérifie ta connexion et réessaie.",
+                code: "TIMEOUT"
+            });
+
+        // Cas 5 : Toute autre erreur inattendue
+        } else {
+            const safeLog = sanitizeErrorMessage(rawMessage);
+            console.error(`[NotebookLM][UNKNOWN]`, safeLog);
+            sendResponse({
+                status: "error",
+                userMessage: "Une erreur inattendue s'est produite. Consulte la console pour le diagnostic.",
+                code: "UNKNOWN"
+            });
+        }
+    }
+}
 
 // Dernière capture (stockée en mémoire pour téléchargement local)
 let lastCaptureData = null;    // base64 PDF ou texte Markdown
@@ -286,8 +382,12 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 
                 sendResponse({ notebooks });
             } catch (err) {
-                console.error("[Background] Échec API: ", err.message);
-                sendResponse({ error: err.message, notebooks: null });
+                console.error("[NotebookLM][GET_NOTEBOOKS]", sanitizeErrorMessage(err.message));
+                sendResponse({
+                    status: "error",
+                    userMessage: "Impossible de récupérer vos carnets. Vérifiez votre connexion et rechargez.",
+                    code: "UNKNOWN"
+                });
             }
         })();
         return true; 
@@ -306,8 +406,12 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 const notebookId = await createPersonalNotebook(message.title, activeIndex);
                 sendResponse({ notebookId });
             } catch (err) {
-                console.error("[Background] Échec création carnet:", err.message);
-                sendResponse({ error: err.message, notebookId: null });
+                console.error("[NotebookLM][CREATE_NOTEBOOK]", sanitizeErrorMessage(err.message));
+                sendResponse({
+                    status: "error",
+                    userMessage: "Impossible de créer le carnet. Vérifiez votre connexion et réessayez.",
+                    code: "UNKNOWN"
+                });
             }
         })();
         return true;
@@ -453,16 +557,24 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         message: `Sélection importée depuis "${cleanTitle}"`
                     });
                 } catch (err) {
-                    console.error("[Background] Échec import sélection:", err.message);
-                    notifyUI("STATUS_UPDATE", { text: err.message, status: "error" });
+                    console.error("[NotebookLM][SELECTION]", sanitizeErrorMessage(err.message));
+                    notifyUI("STATUS_UPDATE", {
+                        status: "error",
+                        userMessage: "Impossible d'importer la sélection. Réessayez.",
+                        code: "UNKNOWN"
+                    });
                 }
             })();
         } else {
             // Formats classiques : PDF, MD, URL, Screenshot, Direct
             executeCaptureAndUploadWorkflow(message.notebookId, message.format || "pdf", message.intentNote)
                 .catch(err => {
-                    console.error("[Clipper Background] Erreur globale :", err);
-                    notifyUI("STATUS_UPDATE", { text: err.message, status: "error" });
+                    console.error("[NotebookLM][WORKFLOW]", sanitizeErrorMessage(err.message));
+                    notifyUI("STATUS_UPDATE", {
+                        status: "error",
+                        userMessage: "Une erreur est survenue pendant l'import. Consulte la console pour le diagnostic.",
+                        code: "UNKNOWN"
+                    });
                 });
         }
     }

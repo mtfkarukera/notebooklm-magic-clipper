@@ -6,6 +6,26 @@
  * Utilisé lorsqu'aucune API officielle n'est disponible (Comptes personnels).
  */
 
+/** Levée quand la structure d'une réponse RPC ne correspond plus
+ *  au schéma connu — signe probable d'un changement d'API Google. */
+export class RpcApiChangedError extends Error {
+    constructor(rpcId) {
+        super(`L'API NotebookLM a été modifiée (RPC: ${rpcId}). Mise à jour requise.`);
+        this.name  = "RpcApiChangedError";
+        this.rpcId = rpcId;
+    }
+}
+
+/** Levée pour toute autre erreur RPC (réponse vide, HTTP 4xx, etc.). */
+export class RpcError extends Error {
+    constructor(rpcId, code, detail) {
+        super(`Erreur RPC ${rpcId} [${code}] : ${detail}`);
+        this.name  = "RpcError";
+        this.rpcId = rpcId;
+        this.code  = code;
+    }
+}
+
 // ============================================
 // 1. ENCODEUR (encoder.py)
 // ============================================
@@ -141,6 +161,35 @@ function decodeResponse(rawResponse, rpcId) {
     return extractRpcResult(chunks, rpcId);
 }
 
+/**
+ * Valide et extrait le payload utile d'une réponse batchexecute.
+ * Incorpore un filet de sécurité structurel.
+ * @param {string} rawResponse  — réponse brute HTTP
+ * @param {string} rpcId        — ex: "izAoDd", "o4cbdc", "wXbhsf"
+ * @returns {any}               — payload parsé, prêt à consommer
+ * @throws {RpcApiChangedError | RpcError | Error}
+ */
+export function validateAndExtractRpcResponse(rawResponse, rpcId) {
+    // Étape 1 — La réponse est-elle valide à la source ?
+    if (!rawResponse || typeof rawResponse !== "string") {
+        throw new RpcError(rpcId, "EMPTY_RESPONSE", "La réponse batchexecute est vide ou de type inattendu.");
+    }
+
+    // Étape 2 — Décoder via le pipeline standardisé existant
+    const chunks = parseChunkedResponse(stripAntiXssi(rawResponse));
+    const result = extractRpcResult(chunks, rpcId);
+
+    // Étape 3 — La structure contient-elle des données exploitables ?
+    if (result === null || result === undefined) {
+        // Aperçu brut sans sanitisation locale (sanitisation dans background.js uniquement)
+        const preview = rawResponse.slice(0, 500);
+        console.warn(`[NotebookLM] Réponse RPC ${rpcId} — structure inattendue. Aperçu brut :`, preview);
+        throw new RpcApiChangedError(rpcId);
+    }
+
+    return result;
+}
+
 // ============================================
 // 3. TRANSPORT (envoi HTTP)
 // ============================================
@@ -176,8 +225,8 @@ export async function sendBatchExecute(rpcId, jsonArgs, authuserIndex = 0) {
 
     const responseText = await response.text();
     
-    // Décoder avec le pipeline complet (comme decoder.py)
-    return decodeResponse(responseText, rpcId);
+    // Valider la structure et extraire avec le pipeline standardisé
+    return validateAndExtractRpcResponse(responseText, rpcId);
 }
 
 // ============================================

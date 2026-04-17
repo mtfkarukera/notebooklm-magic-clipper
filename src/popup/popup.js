@@ -157,8 +157,8 @@ function loadNotebooks() {
          if(res && res.notebooks) {
             allNotebooksCache = res.notebooks;
             renderNotebooks(allNotebooksCache);
-         } else if (res && res.error) {
-            setPlaceholder(uiNotebookList, 'Err: ' + res.error, 'color:#d32f2f; font-size:12px; margin: 10px;');
+         } else if (res && res.status === "error") {
+            setPlaceholder(uiNotebookList, res.userMessage || 'Erreur lors du chargement des carnets.', 'color:#d32f2f; font-size:12px; margin: 10px;');
          } else {
             setPlaceholder(uiNotebookList, 'Aucun carnet trouvé.');
          }
@@ -238,7 +238,7 @@ async function createNewNotebook() {
       const notebookUrl = `https://notebooklm.google.com/notebook/${response.notebookId}`;
       updateStatus(`Carnet "${title}" créé ✅`, "success", notebookUrl);
     } else {
-      updateStatus("Erreur: " + (response?.error || "Création échouée"), "error");
+      updateStatus(response?.userMessage || "Création du carnet échouée. Réessayez.", "error");
     }
   } catch (err) {
     updateStatus("Erreur: " + err.message, "error");
@@ -546,7 +546,10 @@ document.getElementById('btn-close').addEventListener('click', () => {
 
 browser.runtime.onMessage.addListener((message) => {
   if(message.type === "STATUS_UPDATE") {
-    updateStatus(message.text, message.status, message.linkUrl, message.showDownload);
+    const displayText = message.status === "error"
+      ? (message.userMessage || message.text || "Une erreur s'est produite.")
+      : (message.text || message.userMessage || "");
+    updateStatus(displayText, message.status, message.linkUrl, message.showDownload);
     if(message.status === "error" || message.status === "success") {
       resetUI();
       if (message.status === "success") {

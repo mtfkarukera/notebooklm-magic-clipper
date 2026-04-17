@@ -24,6 +24,7 @@ Capturez le contenu de n'importe quelle page web et importez-le directement dans
 | **Matrice de visibilité** | Boutons grisés automatiquement selon le type de fichier détecté |
 | **Multi-comptes** | Sélecteur de compte Google intégré dans la popup |
 | **Notification OS** | Notification système si la popup est fermée pendant l'import |
+| **Résilience API** | Gestion d'erreurs robuste : validation structurelle des réponses RPC, 5 cas d'erreur couverts (API modifiée, session expirée, upload échoué, timeout, erreur inconnue), messages explicites à l'utilisateur, logs sanitisés (zéro fuite de tokens) |
 | **Compatible Mobile** | Firefox Android : popup responsive, touch targets 48dp, détection plateforme |
 | **☁️ Google Drive natif** | Import synchronisable de Google Docs, Sheets, Slides + fichiers hébergés (PDF, images...) |
 
@@ -219,6 +220,15 @@ notebooklm-pdf-clipper/
 
 ## 📋 Changelog récent
 
+### v4.9.0 — Avril 2026
+
+- **Résilience API** : validation structurelle systématique des réponses batchexecute avant consommation (`validateAndExtractRpcResponse`)
+- **Deux classes d'erreurs normalisées** : `RpcApiChangedError` et `RpcError`
+- **Handler centralisé** `safeRpcCall` couvrant 5 cas d'erreur
+- **Sanitisation des logs** : aucun token/cookie ne peut fuiter en console
+- **Messages d'erreur explicites** dans la popup (`userMessage`)
+- **Purge automatique** du cache d'auth en cas de session expirée (401/403)
+
 ### v4.8.0 — Feature Annotation Intent Note
 
 - **Note d'intention (Intent Note)** : Ajout d'un champ texte optionnel dans la popup avant capture.
@@ -278,4 +288,4 @@ notebooklm-pdf-clipper/
 ---
 
 *Projet développé selon la méthodologie **Spec-Driven Development (SDD)**.*
-*Version 4.8.2 — Avril 2026*
+*Version 4.9.0 — Avril 2026*
