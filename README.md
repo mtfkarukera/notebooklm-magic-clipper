@@ -220,6 +220,13 @@ notebooklm-magic-clipper/
 
 ## 📋 Changelog récent
 
+### v5.0.0 — Avril 2026
+
+- **Lazy Loading (Sprint 3)** : Injection à la demande de `Readability.js` et `jsPDF` via `browser.scripting.executeScript`.
+- **Déduplication** : Mécanisme de sentinelles globales (`window.nwc*`) pour garantir une injection unique, sans utilisation de `eval()`.
+- **Réduction de l'empreinte mémoire** : Les content scripts massifs ne sont injectés que lors de l'utilisation des modes PDF et Markdown.
+- **Sécurité AMO** : Refactoring conforme aux standards stricts de sécurité.
+
 ### v4.9.0 — Avril 2026
 
 - **Résilience API** : validation structurelle systématique des réponses batchexecute avant consommation (`validateAndExtractRpcResponse`)
@@ -288,4 +295,4 @@ notebooklm-magic-clipper/
 ---
 
 *Projet développé selon la méthodologie **Spec-Driven Development (SDD)**.*
-*Version 4.9.1 — Avril 2026*
+*Version 5.0.0 — Avril 2026*

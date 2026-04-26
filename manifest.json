@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Magic Clipper for NotebookLM",
   "short_name": "Magic Clipper",
-  "version": "4.9.1",
+  "version": "5.0.0",
   "description": "Capturez, nettoyez et importez instantanément n'importe quelle page web dans Google NotebookLM avec une précision magique.",
   "browser_specific_settings": {
     "gecko": {
@@ -22,7 +22,9 @@
     "activeTab",
     "notifications",
     "downloads",
-    "contextMenus"
+    "contextMenus",
+    "identity",
+    "scripting"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -43,16 +45,8 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": [
-        "lib/jspdf.umd.min.js",
-        "lib/Readability.js",
-        "src/shared/utils.js",
-        "src/content/serializer.js",
-        "src/content/pdf_generator.js",
-        "src/content/md_generator.js",
-        "src/content/orchestrator.js"
-      ],
-      "run_at": "document_end"
+      "js": ["src/content/orchestrator.js"],
+      "run_at": "document_idle"
     }
   ]
 }

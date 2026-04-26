@@ -1,3 +1,4 @@
+window.nwcmdgen      = true;
 // md_generator.js — Rôle : Convertisseur HTML → Markdown structuré
 // VERSION 1.0 : Tables pipe-delimited, headings, listes, liens, code
 //

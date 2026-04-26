@@ -1,3 +1,4 @@
+window.nwcpdfgen     = true;
 // pdf_generator.js — Rôle : dom-to-pdf-converter (jsPDF)
 // VERSION 7 : jsPDF amélioré — images data URI, tables visuelles, contenu Readability
 //

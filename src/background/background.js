@@ -109,6 +109,85 @@ let lastCaptureData = null;    // base64 PDF ou texte Markdown
 let lastCaptureFilename = null;
 let lastCaptureFormat = null;  // "pdf" ou "md"
 
+// =====================================================================
+// INJECTION DYNAMIQUE DES SCRIPTS (Lazy Loading)
+// =====================================================================
+const INJECTION_PIPELINE = {
+    pdf: [
+        "lib/Readability.js",
+        "lib/jspdf.umd.min.js",
+        "src/content/serializer.js",
+        "src/content/pdf_generator.js",
+    ],
+    md: [
+        "lib/Readability.js",
+        "src/content/serializer.js",
+        "src/content/md_generator.js",
+    ],
+    screenshot: [],
+    url: [],
+    direct: [],
+    drive: [],
+    selection: [],
+};
+
+const INJECTION_SENTINELS = {
+    "lib/Readability.js": "Readability",
+    "lib/jspdf.umd.min.js": "jspdf",
+    "src/content/serializer.js": "nwcserializer",
+    "src/content/pdf_generator.js": "nwcpdfgen",
+    "src/content/md_generator.js": "nwcmdgen",
+};
+
+/** Levée quand browser.scripting.executeScript échoue. */
+class InjectionError extends Error {
+    constructor(tabId, file, detail) {
+        super(`Injection échouée sur onglet ${tabId} — ${file} : ${detail}`);
+        this.name = "InjectionError";
+        this.tabId = tabId;
+        this.file = file;
+    }
+}
+
+/**
+ * Retourne true si le script est déjà actif dans l'onglet.
+ */
+async function isScriptInjected(tabId, scriptFile) {
+    const globalVar = INJECTION_SENTINELS[scriptFile];
+    if (!globalVar) return false;
+
+    try {
+        const [{ result }] = await browser.scripting.executeScript({
+            target: { tabId },
+            func: (varName) => typeof window[varName] !== "undefined",
+            args: [globalVar]
+        });
+        return result === true;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Injecte une liste de scripts dans l'ordre dans un onglet.
+ * Ignore silencieusement les scripts déjà présents.
+ */
+async function injectScriptsSequentially(tabId, scripts) {
+    for (const file of scripts) {
+        const alreadyInjected = await isScriptInjected(tabId, file);
+        if (alreadyInjected) continue;
+
+        try {
+            await browser.scripting.executeScript({
+                target: { tabId },
+                files: [file],
+            });
+        } catch (err) {
+            throw new InjectionError(tabId, file, err.message);
+        }
+    }
+}
+
 /**
  * Devine le MIME type d'un fichier Drive à partir du titre de l'onglet Firefox.
  * Format attendu : "nomfichier.ext - Google Drive"
@@ -567,15 +646,42 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
             })();
         } else {
             // Formats classiques : PDF, MD, URL, Screenshot, Direct
-            executeCaptureAndUploadWorkflow(message.notebookId, message.format || "pdf", message.intentNote)
-                .catch(err => {
-                    console.error("[NotebookLM][WORKFLOW]", sanitizeErrorMessage(err.message));
-                    notifyUI("STATUS_UPDATE", {
-                        status: "error",
-                        userMessage: "Une erreur est survenue pendant l'import. Consulte la console pour le diagnostic.",
-                        code: "UNKNOWN"
+            (async () => {
+                // 1. Résoudre le pipeline d'injection pour ce format
+                const format = message.format || "pdf";
+                const scripts = INJECTION_PIPELINE[format] ?? [];
+
+                // 2. Injecter les scripts requis AVANT tout tabs.sendMessage
+                if (scripts.length > 0) {
+                    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+                    if (tabs.length > 0) {
+                        try {
+                            await injectScriptsSequentially(tabs[0].id, scripts);
+                        } catch (err) {
+                            if (err instanceof InjectionError) {
+                                sendResponse({
+                                    status: "error",
+                                    code: "INJECTION_FAILED",
+                                    userMessage: "Impossible d'activer le clipper sur cette page (page système ou restreinte)."
+                                });
+                                return true;
+                            }
+                            throw err;
+                        }
+                    }
+                }
+
+                // 3. Tous les scripts sont actifs → déclencher le workflow
+                executeCaptureAndUploadWorkflow(message.notebookId, format, message.intentNote)
+                    .catch(err => {
+                        console.error("[NotebookLM][WORKFLOW]", sanitizeErrorMessage(err.message));
+                        notifyUI("STATUS_UPDATE", {
+                            status: "error",
+                            userMessage: "Une erreur est survenue pendant l'import. Consulte la console pour le diagnostic.",
+                            code: "UNKNOWN"
+                        });
                     });
-                });
+            })();
         }
     }
 

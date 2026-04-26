@@ -1,3 +1,4 @@
+window.nwcserializer = true;
 // serializer.js — Rôle : readability-content-extractor
 // VERSION 9 : Extraction Readability → Container autonome → Tainted Canvas Protection
 //
