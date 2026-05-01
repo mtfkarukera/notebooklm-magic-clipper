@@ -220,6 +220,9 @@ notebooklm-magic-clipper/
 
 ## 📋 Changelog récent
 
+### v5.2.1 — Correctif sélecteur de langue
+- Fix : options EN, ES, DE, VI manquantes dans le sélecteur de langue de la popup
+
 ### v5.2.0
 - i18n : ajout des locales ES (espagnol), DE (allemand), VI (vietnamien)
 
@@ -303,4 +306,4 @@ notebooklm-magic-clipper/
 ---
 
 *Projet développé selon la méthodologie **Spec-Driven Development (SDD)**.*
-*Version 5.2.0 — Mai 2026*
+*Version 5.2.1 — Mai 2026*
