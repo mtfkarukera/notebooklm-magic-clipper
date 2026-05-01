@@ -326,16 +326,7 @@ function startCaptureProcess() {
  */
 function updateCaptureButtonLabel() {
    const btnText = btnCapture.querySelector('.btn-text');
-   const labels = {
-     pdf: 'Capturer la page',
-     md: 'Capturer la page',
-     url: "Importer l'URL",
-     screenshot: '📸 Capturer le viewport',
-     direct: 'Importer',
-     selection: '📋 Importer la sélection',
-     drive: '☁️ Importer Google Drive'
-   };
-   btnText.textContent = labels[currentFormat] || 'Capturer la page';
+   btnText.textContent = t('popupTitleCapture');
 
    // Affichage conditionnel du champ d'intention
    const intentWrapper = document.getElementById('intent-wrapper');
