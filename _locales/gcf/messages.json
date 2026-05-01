@@ -1,0 +1,132 @@
+{
+  "extensionName": {
+    "message": "Magic Clipper ba NotebookLM",
+    "description": "Extension name displayed in Firefox about:addons"
+  },
+  "extensionDescription": {
+    "message": "Kenbé, pwopté, é chajé nenpòt ki paj wèb adan Google NotebookLM konsidiré sé kenbwa ou ka fè.",
+    "description": "Extension description displayed in Firefox about:addons"
+  },
+  "popupTitleCapture": {
+    "message": "Kenbé paj-lasa",
+    "description": "Main popup heading"
+  },
+  "popupLabelSelectNotebook": {
+    "message": "Chwazi on kayé",
+    "description": "Label for notebook selection"
+  },
+  "popupPlaceholderSearchNotebook": {
+    "message": "Chèché on kayé...",
+    "description": "Placeholder for Fast Research input"
+  },
+  "popupLabelLocale": {
+    "message": "Lang",
+    "description": "Label for the language selector"
+  },
+  "btnPdf": {
+    "message": "PDF",
+    "description": "Button label — export as PDF"
+  },
+  "btnPdfAriaLabel": {
+    "message": "Woté paj-la an PDF é chajé-y adan NotebookLM",
+    "description": "Accessible label for the PDF button"
+  },
+  "btnMarkdown": {
+    "message": "Markdown",
+    "description": "Button label — export as Markdown"
+  },
+  "btnMarkdownAriaLabel": {
+    "message": "Woté paj-la an Markdown é chajé-y adan NotebookLM",
+    "description": "Accessible label for the Markdown button"
+  },
+  "btnUrl": {
+    "message": "URL",
+    "description": "Button label — send URL"
+  },
+  "btnUrlAriaLabel": {
+    "message": "Chajé URL-la dirèktèman adan NotebookLM",
+    "description": "Accessible label for the URL button"
+  },
+  "btnScreenshot": {
+    "message": "Screenshot",
+    "description": "Button label — capture screenshot"
+  },
+  "btnScreenshotAriaLabel": {
+    "message": "Fè on screenshot é chajé-y adan NotebookLM",
+    "description": "Accessible label for the Screenshot button"
+  },
+  "btnDirect": {
+    "message": "Chajé dirèk",
+    "description": "Button label — direct import"
+  },
+  "btnDirectAriaLabel": {
+    "message": "Chajé fichyé-la dirèktèman adan NotebookLM",
+    "description": "Accessible label for the Direct Import button"
+  },
+  "btnDrive": {
+    "message": "Google Drive",
+    "description": "Button label — Google Drive"
+  },
+  "btnDriveAriaLabel": {
+    "message": "Chajé dépi Google Drive",
+    "description": "Accessible label for the Google Drive button"
+  },
+  "intentNoteLabelVisible": {
+    "message": "Ki lidé a'w ?",
+    "description": "Label for the intent note field"
+  },
+  "intentNotePlaceholder": {
+    "message": "Si'w vlé, di nou ka'w ni lidé fè...",
+    "description": "Placeholder text for the intent note textarea"
+  },
+  "statusCapturing": {
+    "message": "Ka kenbé…",
+    "description": "Status message when capturing begins"
+  },
+  "statusUploading": {
+    "message": "Ka chajé… ($PERCENT$%)",
+    "description": "Upload progress message with substitution",
+    "placeholders": {
+      "PERCENT": {
+        "content": "$1",
+        "example": "42"
+      }
+    }
+  },
+  "statusSuccess": {
+    "message": "I byen chajé! ✓",
+    "description": "Status message on success"
+  },
+  "statusProcessing": {
+    "message": "An mannèv…",
+    "description": "Status message during processing"
+  },
+  "errorApiChanged": {
+    "message": "API NotebookLM-la chanjé. Fò ou mété-y a jou.",
+    "description": "User-facing error when API structure is modified"
+  },
+  "errorAuthExpired": {
+    "message": "Sésyon a'w bout. Souplé, wokonèkté-w ankò anlè NotebookLM.",
+    "description": "User-facing error on 401/403"
+  },
+  "errorUploadSessionMissing": {
+    "message": "Bab lè pou voyé fichyé-la an kayé-la.",
+    "description": "User-facing error when upload URL is missing"
+  },
+  "errorTimeout": {
+    "message": "Wòkèt-la pwan twòp tan. Souplé véyé konèksyon a-w.",
+    "description": "User-facing error for timeouts"
+  },
+  "errorInjectionFailed": {
+    "message": "Nou pa ni dwa aktivé klipè-la asi paj-la sa.",
+    "description": "User-facing error when script injection fails"
+  },
+  "errorUnknown": {
+    "message": "Nou pa sav ola bab la sa soti. Gadé ka i ka fèt anlè konsòl-la.",
+    "description": "User-facing error for uncategorized errors"
+  },
+  "menuContextImportSelection": {
+    "message": "Chajé mòso-la sa adan NotebookLM",
+    "description": "Context menu item to import selected text"
+  }
+}

@@ -1,3 +1,5 @@
+import { t, setCustomLocale } from '../shared/utils.js';
+
 // popup.js : Logique UI et communication asynchrone
 
 // Constantes DOM
@@ -34,7 +36,36 @@ function setPlaceholder(container, text, style) {
   container.replaceChildren(div);
 } 
 
-document.addEventListener('DOMContentLoaded', () => {
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+    el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel));
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    el.title = t(el.dataset.i18nTitle);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const { locale } = await browser.storage.local.get('locale');
+  await setCustomLocale(locale ?? '');
+  applyI18n();
+
+  const localeSelector = document.getElementById('locale-selector');
+  if (localeSelector) {
+    if (locale) localeSelector.value = locale;
+    localeSelector.addEventListener('change', async (e) => {
+      await browser.storage.local.set({ locale: e.target.value });
+      await setCustomLocale(e.target.value);
+      applyI18n();
+    });
+  }
+
   // Connexion au background pour obtenir l'état et les carnets
   browser.runtime.sendMessage({ action: "GET_AUTH_STATUS" }).then((response) => {
      if(response && response.status === "CONNECTE") {

@@ -220,6 +220,11 @@ notebooklm-magic-clipper/
 
 ## 📋 Changelog récent
 
+### v5.1.0
+- Internationalisation (i18n) : support EN / FR / Créole guadeloupéen (gcf)
+- Sélecteur de langue dans la popup (Auto / Français / Kréyòl)
+- Moteur i18n custom pour la locale gcf non reconnue nativement par Firefox
+
 ### v5.0.0 — Avril 2026
 
 - **Lazy Loading (Sprint 3)** : Injection à la demande de `Readability.js` et `jsPDF` via `browser.scripting.executeScript`.
@@ -295,4 +300,4 @@ notebooklm-magic-clipper/
 ---
 
 *Projet développé selon la méthodologie **Spec-Driven Development (SDD)**.*
-*Version 5.0.0 — Avril 2026*
+*Version 5.1.0 — Mai 2026*

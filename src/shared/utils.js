@@ -1,5 +1,61 @@
 // utils.js : Fonctions utilitaires partagées
 
+let _customMessages = null;
+
+async function loadLocaleMessages(locale) {
+  try {
+    const url = browser.runtime.getURL(`_locales/${locale}/messages.json`);
+    const res = await fetch(url);
+    if (!res.ok) return {};
+    return await res.json();
+  } catch (e) {
+    return {};
+  }
+}
+
+export async function setCustomLocale(locale) {
+  if (locale === 'en' || locale === 'fr') {
+    _customMessages = null;
+  } else if (locale === 'gcf') {
+    _customMessages = await loadLocaleMessages('gcf');
+  } else {
+    _customMessages = null;
+  }
+}
+
+export function t(key, substitutions = {}) {
+  let msg = "";
+
+  if (_customMessages !== null && _customMessages[key]) {
+    msg = _customMessages[key].message || "";
+    // Gérer les substitutions manuellement pour le mode _customMessages
+    if (substitutions) {
+      const subs = Array.isArray(substitutions) ? substitutions : [substitutions];
+      if (_customMessages[key].placeholders) {
+        let i = 0;
+        for (const phName of Object.keys(_customMessages[key].placeholders)) {
+          if (subs[i] !== undefined) {
+            msg = msg.replace(`$${phName}$`, subs[i]);
+          }
+          i++;
+        }
+      } else {
+        subs.forEach((val, i) => {
+          msg = msg.replace(`$${i + 1}`, val);
+        });
+      }
+    }
+  } else {
+    msg = browser.i18n.getMessage(key, substitutions);
+  }
+
+  if (!msg) {
+    console.warn('[i18n] clé manquante:', key);
+    return key;
+  }
+  return msg;
+}
+
 /**
  * Lanceur de promesse pour le FileReader (utile pour le Base64)
  */

@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "Magic Clipper for NotebookLM",
+  "name": "__MSG_extensionName__",
   "short_name": "Magic Clipper",
-  "version": "5.0.0",
-  "description": "Capturez, nettoyez et importez instantanément n'importe quelle page web dans Google NotebookLM avec une précision magique.",
+  "version": "5.1.0",
+  "default_locale": "en",
+  "description": "__MSG_extensionDescription__",
   "browser_specific_settings": {
     "gecko": {
       "id": "notebooklm-web-clipper@mtfkarukera",
