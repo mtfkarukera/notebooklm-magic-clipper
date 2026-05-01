@@ -18,6 +18,8 @@ body {
   width: 100%;
   min-width: 320px;
   max-width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
   margin: 0;
   padding: 10px;
   box-sizing: border-box;
@@ -94,7 +96,7 @@ input[type="text"]:focus {
 /* Notebook List */
 .notebook-list {
   margin-top: 12px;
-  max-height: 140px;
+  max-height: 110px;
   overflow-y: auto;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
