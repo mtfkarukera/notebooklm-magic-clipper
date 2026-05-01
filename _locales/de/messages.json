@@ -1,0 +1,132 @@
+{
+  "extensionName": {
+    "message": "Magic Clipper für NotebookLM",
+    "description": "Extension name displayed in Firefox about:addons"
+  },
+  "extensionDescription": {
+    "message": "Erfassen, bereinigen und importieren Sie jede Webseite sofort und mit magischer Präzision in Google NotebookLM.",
+    "description": "Extension description displayed in Firefox about:addons"
+  },
+  "popupTitleCapture": {
+    "message": "Diese Seite erfassen",
+    "description": "Main popup heading"
+  },
+  "popupLabelSelectNotebook": {
+    "message": "Notizbuch auswählen",
+    "description": "Label for notebook selection"
+  },
+  "popupPlaceholderSearchNotebook": {
+    "message": "Notizbücher suchen...",
+    "description": "Placeholder for Fast Research input"
+  },
+  "popupLabelLocale": {
+    "message": "Sprache",
+    "description": "Label for the language selector"
+  },
+  "btnPdf": {
+    "message": "PDF",
+    "description": "Button label — export as PDF"
+  },
+  "btnPdfAriaLabel": {
+    "message": "Die Seite als PDF exportieren und in NotebookLM importieren",
+    "description": "Accessible label for the PDF button"
+  },
+  "btnMarkdown": {
+    "message": "Markdown",
+    "description": "Button label — export as Markdown"
+  },
+  "btnMarkdownAriaLabel": {
+    "message": "Die Seite als Markdown exportieren und in NotebookLM importieren",
+    "description": "Accessible label for the Markdown button"
+  },
+  "btnUrl": {
+    "message": "URL",
+    "description": "Button label — send URL"
+  },
+  "btnUrlAriaLabel": {
+    "message": "Die direkte URL an NotebookLM senden",
+    "description": "Accessible label for the URL button"
+  },
+  "btnScreenshot": {
+    "message": "Screenshot",
+    "description": "Button label — capture screenshot"
+  },
+  "btnScreenshotAriaLabel": {
+    "message": "Einen Screenshot erstellen und in NotebookLM importieren",
+    "description": "Accessible label for the Screenshot button"
+  },
+  "btnDirect": {
+    "message": "Direkter Import",
+    "description": "Button label — direct import"
+  },
+  "btnDirectAriaLabel": {
+    "message": "Die Datei direkt in NotebookLM importieren",
+    "description": "Accessible label for the Direct Import button"
+  },
+  "btnDrive": {
+    "message": "Google Drive",
+    "description": "Button label — Google Drive"
+  },
+  "btnDriveAriaLabel": {
+    "message": "Aus Google Drive importieren",
+    "description": "Accessible label for the Google Drive button"
+  },
+  "intentNoteLabelVisible": {
+    "message": "Suchintention (optional)",
+    "description": "Label for the intent note field"
+  },
+  "intentNotePlaceholder": {
+    "message": "Optional: Beschreiben Sie Ihre Suchintention...",
+    "description": "Placeholder text for the intent note textarea"
+  },
+  "statusCapturing": {
+    "message": "Wird erfasst…",
+    "description": "Status message when capturing begins"
+  },
+  "statusUploading": {
+    "message": "Wird hochgeladen… ($PERCENT$%)",
+    "description": "Upload progress message with substitution",
+    "placeholders": {
+      "PERCENT": {
+        "content": "$1",
+        "example": "42"
+      }
+    }
+  },
+  "statusSuccess": {
+    "message": "Import erfolgreich ✓",
+    "description": "Status message on success"
+  },
+  "statusProcessing": {
+    "message": "Wird verarbeitet…",
+    "description": "Status message during processing"
+  },
+  "errorApiChanged": {
+    "message": "Die NotebookLM-API wurde geändert. Ein Update ist erforderlich.",
+    "description": "User-facing error when API structure is modified"
+  },
+  "errorAuthExpired": {
+    "message": "Sitzung abgelaufen. Bitte melden Sie sich erneut bei NotebookLM an.",
+    "description": "User-facing error on 401/403"
+  },
+  "errorUploadSessionMissing": {
+    "message": "Fehler bei der Initialisierung des Uploads.",
+    "description": "User-facing error when upload URL is missing"
+  },
+  "errorTimeout": {
+    "message": "Die Anfrage ist abgelaufen. Bitte überprüfen Sie Ihre Verbindung.",
+    "description": "User-facing error for timeouts"
+  },
+  "errorInjectionFailed": {
+    "message": "Der Clipper kann auf dieser eingeschränkten Seite nicht aktiviert werden.",
+    "description": "User-facing error when script injection fails"
+  },
+  "errorUnknown": {
+    "message": "Ein unbekannter Fehler ist aufgetreten. Überprüfen Sie die Konsole.",
+    "description": "User-facing error for uncategorized errors"
+  },
+  "menuContextImportSelection": {
+    "message": "Auswahl in NotebookLM importieren",
+    "description": "Context menu item to import selected text"
+  }
+}

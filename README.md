@@ -220,6 +220,9 @@ notebooklm-magic-clipper/
 
 ## 📋 Changelog récent
 
+### v5.2.0
+- i18n : ajout des locales ES (espagnol), DE (allemand), VI (vietnamien)
+
 ### v5.1.0
 - Internationalisation (i18n) : support EN / FR / Créole guadeloupéen (gcf)
 - Sélecteur de langue dans la popup (Auto / Français / Kréyòl)
@@ -300,4 +303,4 @@ notebooklm-magic-clipper/
 ---
 
 *Projet développé selon la méthodologie **Spec-Driven Development (SDD)**.*
-*Version 5.1.0 — Mai 2026*
+*Version 5.2.0 — Mai 2026*
