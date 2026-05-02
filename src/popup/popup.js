@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Connexion au background pour obtenir l'état et les carnets
   browser.runtime.sendMessage({ action: "GET_AUTH_STATUS" }).then((response) => {
      if(response && response.status === "CONNECTE") {
-         updateAuthStatus(`Connecté (${response.type})`, "status-success");
+         updateAuthStatus(t('statusConnected').replace('{type}', response.type), "status-success");
          
          if (response.type === "PERSONAL") {
              browser.runtime.sendMessage({ action: "GET_ACCOUNTS" }).then(res => {
@@ -99,12 +99,12 @@ document.addEventListener('DOMContentLoaded', async () => {
              loadNotebooks();
          }
      } else {
-         updateAuthStatus("Déconnecté", "status-error");
-         setPlaceholder(uiNotebookList, "Erreur d'authentification.");
+         updateAuthStatus(t('statusDisconnected'), "status-error");
+         setPlaceholder(uiNotebookList, t('errAuth'));
      }
   }).catch(e => {
-     updateAuthStatus("Déconnecté", "status-error");
-     setPlaceholder(uiNotebookList, "Erreur d'authentification.");
+     updateAuthStatus(t('statusDisconnected'), "status-error");
+     setPlaceholder(uiNotebookList, t('errAuth'));
    });
    
    uiSearchInput.addEventListener('input', debounce((e) => {
@@ -182,16 +182,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function loadNotebooks() {
-    setPlaceholder(uiNotebookList, 'Chargement des carnets...');
+    setPlaceholder(uiNotebookList, t('loadingNotebooks'));
     browser.runtime.sendMessage({ action: "GET_NOTEBOOKS" }).then((res) => {
          uiSearchInput.disabled = false;
          if(res && res.notebooks) {
             allNotebooksCache = res.notebooks;
             renderNotebooks(allNotebooksCache);
          } else if (res && res.status === "error") {
-            setPlaceholder(uiNotebookList, res.userMessage || 'Erreur lors du chargement des carnets.', 'color:#d32f2f; font-size:12px; margin: 10px;');
+            setPlaceholder(uiNotebookList, res.userMessage || t('errLoadNotebooks'), 'color:#d32f2f; font-size:12px; margin: 10px;');
          } else {
-            setPlaceholder(uiNotebookList, 'Aucun carnet trouvé.');
+            setPlaceholder(uiNotebookList, t('noNotebookFound'));
          }
     }).catch(err => {
          setPlaceholder(uiNotebookList, 'Err: ' + err.message, 'color:#d32f2f;');
@@ -202,7 +202,7 @@ function loadNotebooks() {
 function renderNotebooks(list) {
     uiNotebookList.replaceChildren();
     if(list.length === 0) {
-        setPlaceholder(uiNotebookList, 'Carnet introuvable.');
+        setPlaceholder(uiNotebookList, t('notebookNotFound'));
         return;
     }
     list.forEach(nb => {
@@ -243,12 +243,12 @@ function filterNotebooks(query) {
 async function createNewNotebook() {
   const title = uiSearchInput.value.trim();
   if (!title) {
-    updateStatus("Saisissez un nom de carnet dans le champ de recherche.", "error");
+    updateStatus(t('errNoSearchTerm'), "error");
     return;
   }
   
   btnCreateNotebook.disabled = true;
-  updateStatus(`Création du carnet "${title}"...`, "info");
+  updateStatus(t('creatingNotebook').replace('{title}', title), "info");
   
   try {
     const response = await browser.runtime.sendMessage({ 
@@ -267,12 +267,12 @@ async function createNewNotebook() {
       renderNotebooks(allNotebooksCache);
       
       const notebookUrl = `https://notebooklm.google.com/notebook/${response.notebookId}`;
-      updateStatus(`Carnet "${title}" créé ✅`, "success", notebookUrl);
+      updateStatus(t('notebookCreated').replace('{title}', title), "success", notebookUrl);
     } else {
-      updateStatus(response?.userMessage || "Création du carnet échouée. Réessayez.", "error");
+      updateStatus(response?.userMessage || t('errCreateNotebook'), "error");
     }
   } catch (err) {
-    updateStatus("Erreur: " + err.message, "error");
+    updateStatus(t('errGeneric').replace('{msg}', err.message), "error");
   } finally {
     btnCreateNotebook.disabled = false;
   }
@@ -280,7 +280,7 @@ async function createNewNotebook() {
 
 function startCaptureProcess() {
    if (!currentSelectedNotebookId) {
-     updateStatus("Veuillez d'abord sélectionner un carnet.", "error");
+     updateStatus(t('errNoNotebook'), "error");
      return;
    }
 
@@ -289,7 +289,7 @@ function startCaptureProcess() {
      btnCapture.disabled = true;
      uiSearchInput.disabled = true;
      btnCustomSpinner.classList.remove('hidden');
-     updateStatus("📋 Import de la sélection...", "info");
+     updateStatus(t('importingSelection'), "info");
      
      browser.runtime.sendMessage({
        action: "START_CAPTURE",
@@ -311,7 +311,7 @@ function startCaptureProcess() {
 
    const formatLabels = { pdf: 'PDF', md: 'Markdown', url: 'URL', screenshot: 'Screenshot', direct: 'Import direct', drive: 'Google Drive' };
    const label = formatLabels[currentFormat] || currentFormat;
-   updateStatus(`Import en ${label}...`, "info");
+   updateStatus(t('importingFormat').replace('{label}', label), "info");
 
    browser.runtime.sendMessage({ 
      action: "START_CAPTURE", 
@@ -405,7 +405,7 @@ async function detectActiveTabFileType() {
          });
          btnDirectImport.classList.add('btn-disabled');
          currentFormat = 'direct';
-         updateStatus("⚠️ Fichier local — l'import direct n'est pas disponible.", "info");
+         updateStatus(t('warnLocalFile'), "info");
          updateCaptureButtonLabel();
        } else {
          // === Fichier distant : bouton Import Direct normal ===
@@ -542,10 +542,10 @@ function updateStatus(message, type, linkUrl, showDownload) {
         if (res && res.ok) {
           dlLink.textContent = ' ' + t('linkDownloaded');
         } else {
-          dlLink.textContent = ' ❌ ' + (res?.error || 'Erreur');
+          dlLink.textContent = ' ' + t('errDownload');
         }
       }).catch(() => {
-        dlLink.textContent = ' ❌ Erreur';
+        dlLink.textContent = ' ' + t('errDownload');
       });
     });
     uiStatusMessage.appendChild(dlLink);
@@ -569,7 +569,7 @@ document.getElementById('btn-close').addEventListener('click', () => {
 browser.runtime.onMessage.addListener((message) => {
   if(message.type === "STATUS_UPDATE") {
     const displayText = message.status === "error"
-      ? (message.userMessage || message.text || "Une erreur s'est produite.")
+      ? (message.userMessage || message.text || t('errGenericOccurred'))
       : (message.text || message.userMessage || "");
     updateStatus(displayText, message.status, message.linkUrl, message.showDownload);
     if(message.status === "error" || message.status === "success") {
