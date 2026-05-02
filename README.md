@@ -220,6 +220,9 @@ notebooklm-magic-clipper/
 
 ## 📋 Changelog récent
 
+### v5.3.1 — Ajustements i18n
+- fix(i18n) : Corrections et affinage de la traduction en Créole guadeloupéen (GCF).
+
 ### v5.3.0 — Cohérence i18n complète (Sprint 4)
 - feat(i18n) : Support complet et traduction à 100% pour l'allemand (DE), l'espagnol (ES) et le vietnamien (VI).
 - refactor(i18n) : Migration de l'architecture de messages background pour le support total de la locale hybride Créole guadeloupéen (GCF).
@@ -318,4 +321,4 @@ notebooklm-magic-clipper/
 ---
 
 *Projet développé selon la méthodologie **Spec-Driven Development (SDD)**.*
-*Version 5.3.0 — Mai 2026*
+*Version 5.3.1 — Mai 2026*

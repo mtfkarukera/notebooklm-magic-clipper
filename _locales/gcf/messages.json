@@ -130,13 +130,13 @@
     "description": "Context menu item to import selected text"
   },
   "popupLabelFormat": {
-    "message": "Jan a enpòtasyon la"
+    "message": "An ki jan ou vlé chajé pyès-la ?"
   },
   "popupStatusReady": {
     "message": "Paré"
   },
   "btnClose": {
-    "message": "✖ Fèmen"
+    "message": "✖ Fèmé"
   },
   "linkOpenNotebook": {
     "message": "Wouvè kayé-la →"
