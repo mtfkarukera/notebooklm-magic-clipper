@@ -319,5 +319,59 @@
   "errInjectionFailed": {
     "message": "Không thể kích hoạt clipper trên trang này (trang hệ thống hoặc bị hạn chế).",
     "description": "Lỗi khi tiêm script trên trang bị hạn chế"
-  }
+  },
+  "statusConnecting": {
+    "message": "Đang kết nối...",
+    "description": "Văn bản ban đầu của huy hiệu xác thực khi tải"
+  },
+  "btnCreateNotebook": {
+    "message": "Tạo sổ tay mới",
+    "description": "Chú thích cho nút + tạo sổ tay"
+  },
+  "btnCancelSelection": {
+    "message": "Hủy",
+    "description": "Chú thích cho nút ✕ xóa lựa chọn đang chờ"
+  },
+  "btnPdfTitle": {
+    "message": "Hình ảnh nhúng, bố cục trực quan",
+    "description": "Chú thích cho nút định dạng PDF"
+  },
+  "btnMarkdownTitle": {
+    "message": "Bảng hoàn hảo, siêu nhẹ, gốc Gemini",
+    "description": "Chú thích cho nút định dạng Markdown"
+  },
+  "btnUrlTitle": {
+    "message": "Nhập tức thì — NotebookLM quét trang",
+    "description": "Chú thích cho nút định dạng URL"
+  },
+  "btnScreenshotTitle": {
+    "message": "Chụp viewport hiển thị dưới dạng PNG",
+    "description": "Chú thích cho nút Screenshot"
+  },
+  "btnDriveTitle": {
+    "message": "Đồng bộ gốc với Google Drive",
+    "description": "Chú thích cho nút Drive"
+  },
+  "btnDirectTitle": {
+    "message": "Nhập tệp gốc nguyên trạng",
+    "description": "Chú thích cho nút Nhập trực tiếp"
+  },
+  "notifSuccessTitle": {
+    "message": "Magic Clipper cho NotebookLM",
+    "description": "Tiêu đề thông báo thành công"
+  },
+  "notifSelectionImported": {
+    "message": "Đã nhập lựa chọn từ \"{title}\"",
+    "description": "Nội dung thông báo sau khi nhập lựa chọn",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Trang của tôi" }
+    }
+  },
+  "formatLabelPdf": { "message": "PDF" },
+  "formatLabelMarkdown": { "message": "Markdown" },
+  "formatLabelUrl": { "message": "URL" },
+  "formatLabelScreenshot": { "message": "Ảnh chụp màn hình" },
+  "formatLabelDirect": { "message": "Nhập trực tiếp" },
+  "formatLabelDrive": { "message": "Google Drive" },
+  "formatLabelSelection": { "message": "Lựa chọn văn bản" }
 }

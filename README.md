@@ -220,6 +220,15 @@ notebooklm-magic-clipper/
 
 ## 📋 Changelog récent
 
+### v5.3.0 — Sprint 4 : Cohérence i18n Complète
+
+- **Zéro string hardcodée** : toutes les strings visibles par l'utilisateur passent désormais par `t()` (popup) ou `browser.i18n.getMessage()` (background).
+- **19 nouvelles clés i18n** dans les 6 locales (EN, FR, GCF, DE, ES, VI) : tooltips des boutons format, badge de connexion, labels de format, notifications système.
+- **`popup.html`** : attribut `lang` corrigé en `en`, badge `#auth-status` localisé via `data-i18n`, `title` de tous les boutons migré vers `data-i18n-title`.
+- **`popup.js`** : fallbacks FR remplacés par `t()`, `formatLabels` dict entièrement localisé.
+- **`background.js`** : menu contextuel, notifications de sélection et de succès entièrement localisés via `browser.i18n.getMessage()`.
+- **`utils.js`** : suppression du doublon `guessMimeFromTitle()` (consolidé dans `background.js`) ; `window.ClipperUtils` nettoyé.
+
 ### v5.2.3 — i18n complète : 3 nouvelles clés, 6 locales
 - fix(i18n) : Ajout des clés `popupLabelFormat`, `popupStatusReady` et `btnClose` dans les 6 locales (FR, EN, ES, DE, VI, GCF).
 - Fichiers modifiés : `_locales/*/messages.json`, `src/popup/popup.html`
@@ -313,4 +322,4 @@ notebooklm-magic-clipper/
 ---
 
 *Projet développé selon la méthodologie **Spec-Driven Development (SDD)**.*
-*Version 5.2.3 — Mai 2026*
+*Version 5.3.0 — Mai 2026*

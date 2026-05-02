@@ -346,7 +346,7 @@ browser.runtime.onInstalled.addListener(async () => {
         await browser.contextMenus.removeAll();
         browser.contextMenus.create({
             id: "nwc-clip-selection",
-            title: "📎 Clipper la sélection dans NotebookLM",
+            title: browser.i18n.getMessage('menuContextImportSelection'),
             contexts: ["selection"]
         });
     } catch (e) {
@@ -386,8 +386,8 @@ if (browser.contextMenus?.onClicked) {
                 browser.notifications.create("nwc-selection-ready", {
                     type: "basic",
                     iconUrl: browser.runtime.getURL("icons/icon.svg"),
-                    title: "Sélection capturée ✓",
-                    message: "Cliquez sur le bouton NotebookLM Web Clipper pour choisir un carnet."
+                    title: browser.i18n.getMessage('notifSelectionCaptured'),
+                    message: browser.i18n.getMessage('notifSelectionMsg')
                 });
             }
         }
@@ -614,8 +614,8 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     browser.notifications.create({
                         type: "basic",
                         iconUrl: browser.runtime.getURL("icons/icon.svg"),
-                        title: "NotebookLM Web Clipper",
-                        message: `Sélection importée depuis "${cleanTitle}"`
+                        title: browser.i18n.getMessage('notifSuccessTitle'),
+                        message: browser.i18n.getMessage('notifSelectionImported', [cleanTitle])
                     });
                 } catch (err) {
                     console.error("[NotebookLM][SELECTION]", sanitizeErrorMessage(err.message));
@@ -877,12 +877,18 @@ async function executeCaptureAndUploadWorkflow(targetNotebookId, format, intentN
         }
     }
 
-    const formatLabels = { pdf: "PDF", md: "Markdown", url: "URL", screenshot: "Screenshot", direct: "Import direct" };
+    const formatLabels = {
+        pdf:        browser.i18n.getMessage('formatLabelPdf'),
+        md:         browser.i18n.getMessage('formatLabelMarkdown'),
+        url:        browser.i18n.getMessage('formatLabelUrl'),
+        screenshot: browser.i18n.getMessage('formatLabelScreenshot'),
+        direct:     browser.i18n.getMessage('formatLabelDirect')
+    };
     browser.notifications.create({
         type: "basic",
         iconUrl: browser.runtime.getURL("icons/icon.svg"),
-        title: "NotebookLM Web Clipper",
-        message: `"${cleanTitle}" ajouté en ${formatLabels[format] || format} avec succès !`
+        title: browser.i18n.getMessage('notifSuccessTitle'),
+        message: browser.i18n.getMessage('notifSuccessMsg', [cleanTitle, formatLabels[format] || format])
     });
 }
 

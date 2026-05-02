@@ -319,5 +319,59 @@
   "errInjectionFailed": {
     "message": "Der Clipper kann auf dieser Seite nicht aktiviert werden (System- oder eingeschränkte Seite).",
     "description": "Fehler bei der Skriptinjektion auf einer gesperrten Seite"
-  }
+  },
+  "statusConnecting": {
+    "message": "Verbinde...",
+    "description": "Anfangstext des Auth-Status-Badges beim Laden"
+  },
+  "btnCreateNotebook": {
+    "message": "Neues Notizbuch erstellen",
+    "description": "Tooltip für den +-Button, der ein Notizbuch erstellt"
+  },
+  "btnCancelSelection": {
+    "message": "Abbrechen",
+    "description": "Tooltip für den ✕-Button, der die ausstehende Auswahl löscht"
+  },
+  "btnPdfTitle": {
+    "message": "Eingebettete Bilder, visuelles Layout",
+    "description": "Tooltip für den PDF-Format-Button"
+  },
+  "btnMarkdownTitle": {
+    "message": "Perfekte Tabellen, ultraleicht, nativ Gemini",
+    "description": "Tooltip für den Markdown-Format-Button"
+  },
+  "btnUrlTitle": {
+    "message": "Sofortimport — NotebookLM liest die Seite",
+    "description": "Tooltip für den URL-Format-Button"
+  },
+  "btnScreenshotTitle": {
+    "message": "Sichtbaren Viewport als PNG aufnehmen",
+    "description": "Tooltip für den Screenshot-Button"
+  },
+  "btnDriveTitle": {
+    "message": "Nativer Google Drive-Sync",
+    "description": "Tooltip für den Drive-Button"
+  },
+  "btnDirectTitle": {
+    "message": "Originaldatei direkt importieren",
+    "description": "Tooltip für den Direktimport-Button"
+  },
+  "notifSuccessTitle": {
+    "message": "Magic Clipper für NotebookLM",
+    "description": "Titel der Erfolgsmeldung"
+  },
+  "notifSelectionImported": {
+    "message": "Auswahl importiert von \"{title}\"",
+    "description": "Inhalt der Benachrichtigung nach dem Importieren einer Auswahl",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Meine Seite" }
+    }
+  },
+  "formatLabelPdf": { "message": "PDF" },
+  "formatLabelMarkdown": { "message": "Markdown" },
+  "formatLabelUrl": { "message": "URL" },
+  "formatLabelScreenshot": { "message": "Screenshot" },
+  "formatLabelDirect": { "message": "Direkter Import" },
+  "formatLabelDrive": { "message": "Google Drive" },
+  "formatLabelSelection": { "message": "Textauswahl" }
 }

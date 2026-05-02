@@ -212,5 +212,59 @@
   "errInjectionFailed": {
     "message": "Cannot activate the clipper on this page (system or restricted page).",
     "description": "Error when script injection fails on a restricted page"
-  }
+  },
+  "statusConnecting": {
+    "message": "Connecting...",
+    "description": "Initial text of the auth status badge while loading"
+  },
+  "btnCreateNotebook": {
+    "message": "Create a new notebook",
+    "description": "Tooltip for the + button that creates a new notebook"
+  },
+  "btnCancelSelection": {
+    "message": "Cancel",
+    "description": "Tooltip for the ✕ button that clears a pending selection"
+  },
+  "btnPdfTitle": {
+    "message": "Embedded images, visual layout",
+    "description": "Tooltip for the PDF format button"
+  },
+  "btnMarkdownTitle": {
+    "message": "Perfect tables, ultra-light, native Gemini",
+    "description": "Tooltip for the Markdown format button"
+  },
+  "btnUrlTitle": {
+    "message": "Instant import — NotebookLM scrapes the page",
+    "description": "Tooltip for the URL format button"
+  },
+  "btnScreenshotTitle": {
+    "message": "Captures the visible viewport as PNG",
+    "description": "Tooltip for the Screenshot format button"
+  },
+  "btnDriveTitle": {
+    "message": "Native Google Drive sync",
+    "description": "Tooltip for the Drive format button"
+  },
+  "btnDirectTitle": {
+    "message": "Import the original file as-is",
+    "description": "Tooltip for the Direct Import button"
+  },
+  "notifSuccessTitle": {
+    "message": "Magic Clipper for NotebookLM",
+    "description": "Title of the success notification"
+  },
+  "notifSelectionImported": {
+    "message": "Selection imported from \"{title}\"",
+    "description": "Body of the notification after a selection is imported",
+    "placeholders": {
+      "title": { "content": "$1", "example": "My Page" }
+    }
+  },
+  "formatLabelPdf": { "message": "PDF" },
+  "formatLabelMarkdown": { "message": "Markdown" },
+  "formatLabelUrl": { "message": "URL" },
+  "formatLabelScreenshot": { "message": "Screenshot" },
+  "formatLabelDirect": { "message": "Direct Import" },
+  "formatLabelDrive": { "message": "Google Drive" },
+  "formatLabelSelection": { "message": "Text selection" }
 }

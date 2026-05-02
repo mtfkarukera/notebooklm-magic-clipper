@@ -190,8 +190,8 @@ function loadNotebooks() {
             renderNotebooks(allNotebooksCache);
          } else if (res && res.status === "error") {
             const msg = res.i18nKey
-                ? (browser.i18n.getMessage(res.i18nKey) || "Erreur lors du chargement des carnets.")
-                : "Erreur lors du chargement des carnets.";
+                ? (browser.i18n.getMessage(res.i18nKey) || t('errLoadNotebooks'))
+                : t('errLoadNotebooks');
             setPlaceholder(uiNotebookList, msg, "color:#d32f2f;font-size:12px;margin:10px");
          } else {
             setPlaceholder(uiNotebookList, t('noNotebookFound'));
@@ -273,8 +273,8 @@ async function createNewNotebook() {
       updateStatus(t('notebookCreated').replace('{title}', title), "success", notebookUrl);
     } else {
       const msg = response?.i18nKey
-          ? (browser.i18n.getMessage(response.i18nKey) || "Création du carnet échouée. Réessayez.")
-          : "Création du carnet échouée. Réessayez.";
+          ? (browser.i18n.getMessage(response.i18nKey) || t('errCreateNotebook'))
+          : t('errCreateNotebook');
       updateStatus(msg, "error");
     }
   } catch (err) {
@@ -315,7 +315,14 @@ function startCaptureProcess() {
    uiSearchInput.disabled = true;
    btnCustomSpinner.classList.remove('hidden');
 
-   const formatLabels = { pdf: 'PDF', md: 'Markdown', url: 'URL', screenshot: 'Screenshot', direct: 'Import direct', drive: 'Google Drive' };
+   const formatLabels = {
+     pdf:        t('formatLabelPdf'),
+     md:         t('formatLabelMarkdown'),
+     url:        t('formatLabelUrl'),
+     screenshot: t('formatLabelScreenshot'),
+     direct:     t('formatLabelDirect'),
+     drive:      t('formatLabelDrive')
+   };
    const label = formatLabels[currentFormat] || currentFormat;
    updateStatus(t('importingFormat').replace('{label}', label), "info");
 
@@ -578,10 +585,10 @@ browser.runtime.onMessage.addListener(message => {
     if (message.i18nKey) {
         displayText = browser.i18n.getMessage(message.i18nKey)
             || message.text
-            || "Une erreur s'est produite.";
+            || t('errGenericOccurred');
     } else {
         displayText = message.status === "error"
-            ? (message.text || "Une erreur s'est produite.")
+            ? (message.text || t('errGenericOccurred'))
             : message.text;
     }
     updateStatus(displayText, message.status, message.linkUrl, message.showDownload);
