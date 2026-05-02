@@ -9,6 +9,7 @@ Capturez le contenu de n'importe quelle page web et importez-le directement dans
 | Fonctionnalité | Description |
 | --- | --- |
 | **7 modes d'import** | 📄 PDF, 📝 Markdown, 🔗 URL, 📸 Screenshot, ⚡ Import Direct, 📋 Sélection, ☁️ Google Drive |
+| **Internationalisation** | Support 100% en 6 langues (EN, FR, GCF, ES, DE, VI) avec basculement dynamique |
 | **📸 Screenshot** | Capture le viewport visible en PNG via `captureVisibleTab()` |
 | **⚡ Import Direct** | Détecte et importe ~50 types de fichiers (PDF, images, audio, vidéo, documents) |
 | **📋 Clip de sélection** | Clic droit → « 📎 Clipper la sélection » → import du texte sélectionné |
@@ -64,16 +65,16 @@ Sélectionnez du texte sur n'importe quelle page, faites un clic droit → **« 
 │   Popup (UI)    │────▶│  Background.js   │────▶│  NotebookLM API     │
 │  popup.html/js  │     │  (Event Page)    │     │  /batchexecute      │
 │  7 modes import │     │  Routeur central │     │  /upload/_/         │
-│  Toggle format  │     │  CORS proxy img  │     │                     │
+│  Sélecteur i18n │     │  CORS proxy img  │     │                     │
 │  Sélection clip │     │  Context menu    │     │                     │
 └─────────────────┘     └──────┬───────────┘     └─────────────────────┘
-                               │
+                               │ (Lazy Loading via executeScript)
                         ┌──────▼───────────┐
                         │  Content Script  │
                         │  orchestrator.js │  ← Route PDF/MD + GET_SELECTION_HTML
-                        │  serializer.js   │  ← Readability + data URIs
-                        │  pdf_generator.js│  ← jsPDF + addImage
-                        │  md_generator.js │  ← Markdown pipe-delimited
+                        │  serializer.js   │  ← Readability + data URIs (injecté à la demande)
+                        │  pdfgenerator.js │  ← jsPDF + addImage (injecté à la demande)
+                        │  mdgenerator.js  │  ← Markdown pipe-delimited (injecté à la demande)
                         └──────────────────┘
 ```
 
@@ -109,8 +110,8 @@ Quand un fichier est détecté (ex: image, audio), les boutons non pertinents so
 
 | Type de compte | Méthode | Module |
 | --- | --- | --- |
-| **Personnel** | Extraction cookies (`SID`, `HSID`, `SSID`) + CSRF | `auth_personal.js` + `rpc_client.js` |
-| **Workspace** | OAuth 2.0 + API Discovery Engine | `auth_workspace.js` |
+| **Personnel** | Extraction cookies (`SID`, `HSID`, `SSID`) + CSRF | `authpersonal.js` + `rpcclient.js` |
+| **Workspace** | OAuth 2.0 + API Discovery Engine | `authworkspace.js` |
 
 > 🔒 **Sécurité** : Cookies/jetons jamais exposés. `browser.storage.local` purgé automatiquement en cas d'erreur 401/403. DOM 100% sécurisé (zéro `innerHTML`).
 
@@ -170,27 +171,33 @@ npm install -g web-ext
 ```text
 notebooklm-magic-clipper/
 ├── manifest.json                   # Manifest V3 Firefox (Event Page)
+├── _locales/                       # Traductions i18n natives et hybrides
+│   ├── en/, fr/, de/, es/, vi/     # Langues natives
+│   └── gcf/                        # Créole guadeloupéen (chargement custom)
 ├── lib/
-│   ├── jspdf.umd.min.js           # jsPDF 2.5.2 standalone
-│   └── Readability.js             # Mozilla Readability.js
+│   ├── jspdf.umd.min.js            # jsPDF 2.5.2 standalone (injecté via lazy loading)
+│   └── Readability.js              # Mozilla Readability.js (injecté via lazy loading)
 ├── src/
 │   ├── background/
-│   │   ├── background.js           # Routeur central + 7 pipelines + menu contextuel
+│   │   ├── background.js           # Routeur central + 7 pipelines + menu contextuel + i18n
 │   │   └── api/
-│   │       ├── auth_personal.js    # Extraction cookies + CSRF
-│   │       ├── auth_workspace.js   # OAuth 2.0 Discovery Engine
-│   │       └── rpc_client.js       # batchexecute + upload + addText + addUrl + addDrive
+│   │       ├── authpersonal.js     # Extraction cookies + CSRF
+│   │       ├── authworkspace.js    # OAuth 2.0 Discovery Engine
+│   │       └── rpcclient.js        # batchexecute + upload + addText + addUrl + addDrive
 │   ├── content/
 │   │   ├── orchestrator.js         # Point d'entrée (route PDF/MD + GET_SELECTION_HTML)
 │   │   ├── serializer.js           # Readability + Reader Mode CSS + data URIs
-│   │   ├── pdf_generator.js        # jsPDF (texte + images + tables)
-│   │   └── md_generator.js         # Markdown (tables pipe-delimited)
+│   │   ├── pdfgenerator.js         # jsPDF (texte + images + tables)
+│   │   └── mdgenerator.js          # Markdown (tables pipe-delimited)
 │   ├── popup/
-│   │   ├── popup.html              # Interface avec toggle 7 formats + bandeau sélection
+│   │   ├── popup.html              # Interface avec toggle 7 formats + sélecteur i18n
 │   │   ├── popup.css               # Design Glassmorphism
-│   │   └── popup.js                # Logique UI + toggle + détection Drive + sélection
+│   │   └── popup.js                # Logique UI + sélecteur i18n + appel t() + sélection
 │   └── shared/
-│       └── utils.js                # Utilitaires (blobToBase64, parseDriveUrl)
+│       └── utils.js                # Moteur i18n (t(), gcf), blobToBase64, parseDriveUrl
+├── tools/                          # Outils Node.js de développement
+│   ├── check-i18n.js               # Audit de complétude i18n
+│   └── add-new-keys.js             # Injection par lot de clés de traduction
 ├── dist/                           # XPI empaquetés
 ├── sign.sh                         # Script de signature AMO
 └── .gitignore
