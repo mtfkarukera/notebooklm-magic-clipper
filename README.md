@@ -227,6 +227,9 @@ notebooklm-magic-clipper/
 
 ## 📋 Changelog récent
 
+### v5.4.0 — Mode Sombre Natif (Sprint 5)
+- feat(ui) : Support automatique du mode sombre (Dark Mode) en fonction des préférences du système ou du navigateur. Implémentation 100% CSS (prefers-color-scheme) pour garantir zéro impact sur les performances et conserver la fluidité du glassmorphism.
+
 ### v5.3.1 — Ajustements i18n
 - fix(i18n) : Corrections et affinage de la traduction en Créole guadeloupéen (GCF).
 
@@ -328,4 +331,4 @@ notebooklm-magic-clipper/
 ---
 
 *Projet développé selon la méthodologie **Spec-Driven Development (SDD)**.*
-*Version 5.3.1 — Mai 2026*
+*Version 5.4.0 — Mai 2026*
